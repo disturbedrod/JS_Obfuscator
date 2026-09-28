@@ -22,7 +22,8 @@ export async function obfuscateSelection(): Promise<void> {
 
 	let options: ObfuscatorOptions;
 	try {
-		options = await new OptionsResolver().resolve(editor.document.uri);
+		// A source map for a fragment spliced into a file would point at the wrong place, so selections never get one.
+		options = { ...(await new OptionsResolver().resolve(editor.document.uri)), sourceMap: false };
 	} catch (err) {
 		vscode.window.showErrorMessage(`JS Obfuscator: ${errorMessage(err)}`);
 		return;

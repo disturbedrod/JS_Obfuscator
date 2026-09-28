@@ -1,7 +1,7 @@
 {
   "name": "js-obfuscator",
   "displayName": "JS Obfuscator",
-  "description": "Obfuscate JavaScript files and selections from inside VS Code.",
+  "description": "Obfuscate JavaScript, TypeScript and inline HTML scripts from inside VS Code.",
   "version": "0.0.1",
   "publisher": "your-publisher-id",
   "license": "UNLICENSED",
@@ -15,10 +15,17 @@
     "javascript",
     "obfuscate",
     "obfuscator",
-    "minify"
+    "minify",
+    "typescript",
+    "html",
+    "source map"
   ],
   "main": "./out/extension.js",
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:html"
+  ],
   "contributes": {
     "commands": [
       {
@@ -31,6 +38,18 @@
         "command": "jsObfuscator.obfuscateFileAs",
         "title": "Obfuscate File As...",
         "category": "JS Obfuscator"
+      },
+      {
+        "command": "jsObfuscator.previewObfuscation",
+        "title": "Preview Obfuscation",
+        "category": "JS Obfuscator",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "jsObfuscator.savePreview",
+        "title": "Save Obfuscated Output",
+        "category": "JS Obfuscator",
+        "icon": "$(save)"
       },
       {
         "command": "jsObfuscator.obfuscateSelection",
@@ -57,11 +76,19 @@
       "commandPalette": [
         {
           "command": "jsObfuscator.obfuscateFileToNewFile",
-          "when": "editorLangId == javascript"
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/"
         },
         {
           "command": "jsObfuscator.obfuscateFileAs",
-          "when": "editorLangId == javascript"
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/"
+        },
+        {
+          "command": "jsObfuscator.previewObfuscation",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/"
+        },
+        {
+          "command": "jsObfuscator.savePreview",
+          "when": "resourceScheme == js-obfuscator-preview"
         },
         {
           "command": "jsObfuscator.obfuscateSelection",
@@ -84,37 +111,52 @@
         },
         {
           "command": "jsObfuscator.obfuscateFileToNewFile",
-          "when": "editorLangId == javascript",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/",
           "group": "1_modification@101"
         },
         {
           "command": "jsObfuscator.obfuscateFileAs",
-          "when": "editorLangId == javascript",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/",
           "group": "1_modification@102"
+        },
+        {
+          "command": "jsObfuscator.previewObfuscation",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/",
+          "group": "1_modification@103"
         }
       ],
       "editor/title": [
         {
           "command": "jsObfuscator.obfuscateFileToNewFile",
-          "when": "editorLangId == javascript",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/",
+          "group": "navigation@100"
+        },
+        {
+          "command": "jsObfuscator.savePreview",
+          "when": "resourceScheme == js-obfuscator-preview",
           "group": "navigation@100"
         }
       ],
       "explorer/context": [
         {
           "command": "jsObfuscator.obfuscateFileToNewFile",
-          "when": "resourceLangId == javascript && !explorerResourceIsFolder",
+          "when": "resourceLangId =~ /^(javascript|typescript|html)$/ && !explorerResourceIsFolder",
           "group": "7_modification@100"
         },
         {
           "command": "jsObfuscator.obfuscateFileAs",
-          "when": "resourceLangId == javascript && !explorerResourceIsFolder",
+          "when": "resourceLangId =~ /^(javascript|typescript|html)$/ && !explorerResourceIsFolder",
           "group": "7_modification@101"
+        },
+        {
+          "command": "jsObfuscator.previewObfuscation",
+          "when": "resourceLangId =~ /^(javascript|typescript|html)$/ && !explorerResourceIsFolder",
+          "group": "7_modification@102"
         },
         {
           "command": "jsObfuscator.obfuscateFolder",
           "when": "explorerResourceIsFolder",
-          "group": "7_modification@102"
+          "group": "7_modification@103"
         }
       ]
     },
@@ -162,8 +204,14 @@
               "**/node_modules/**",
               "**/.git/**"
             ],
-            "markdownDescription": "Glob patterns skipped by **Obfuscate All JavaScript in Folder**. With more than one entry, patterns cannot contain `{}` themselves; add separate entries instead.",
+            "markdownDescription": "Glob patterns skipped by **Obfuscate All JavaScript in Folder**, such as `**/*.html` to leave HTML pages out. With more than one entry, patterns cannot contain `{}` themselves; add separate entries instead.",
             "order": 3
+          },
+          "jsObfuscator.statusBar.enabled": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Show the preset that applies to the active JavaScript, TypeScript or HTML file in the status bar.",
+            "order": 4
           }
         }
       },
@@ -324,6 +372,22 @@
             "default": false,
             "markdownDescription": "Make browser developer tools hard to use on the code.\n\nOnly overrides the preset when you set it.",
             "order": 19
+          },
+          "jsObfuscator.options.sourceMap": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Generate a source map pointing back at the original file (the .ts file for TypeScript). Not for HTML pages or selections. Keep maps private: they undo the obfuscation.\n\nOnly overrides the preset when you set it.",
+            "order": 20
+          },
+          "jsObfuscator.options.sourceMapMode": {
+            "type": "string",
+            "enum": [
+              "inline",
+              "separate"
+            ],
+            "default": "separate",
+            "markdownDescription": "separate writes <output>.map next to the output file; inline embeds the map in the output.\n\nOnly overrides the preset when you set it.",
+            "order": 21
           }
         }
       }
@@ -336,7 +400,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run typecheck && npm run bundle -- --minify",
     "compile": "npm run typecheck && npm run bundle",
     "typecheck": "tsc -p ./ --noEmit",
     "bundle": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node20 --sourcemap",
@@ -348,10 +412,12 @@
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.95.0",
     "@vscode/vsce": "^3.0.0",
-    "esbuild": "^0.28.2",
-    "typescript": "^5.6.0"
+    "esbuild": "^0.28.2"
   },
   "dependencies": {
-    "javascript-obfuscator": "^5.8.0"
+    "@jridgewell/remapping": "^2.3.5",
+    "javascript-obfuscator": "^5.8.0",
+    "parse5": "^7.3.0",
+    "typescript": "^5.9.3"
   }
 }

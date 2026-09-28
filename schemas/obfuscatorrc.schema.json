@@ -118,7 +118,7 @@
 			"type": "boolean"
 		},
 		"inputFileName": {
-			"description": "Name of the source file, used in source maps.",
+			"description": "Name of the source file in source maps. Set by this extension to the original file's path.",
 			"type": "string"
 		},
 		"log": {
@@ -183,19 +183,19 @@
 			"type": "boolean"
 		},
 		"sourceMap": {
-			"description": "Generate a source map. Only sourceMapMode \"inline\" is useful here: this extension does not write separate .map files.",
+			"description": "Generate a source map pointing back at the original file (the .ts file for TypeScript). Not for HTML pages or selections. Keep maps private: they undo the obfuscation.",
 			"type": "boolean"
 		},
 		"sourceMapBaseUrl": {
-			"description": "Base URL for the source map comment when sourceMapMode is \"separate\".",
+			"description": "URL prepended to the map file name in the sourceMappingURL comment when sourceMapMode is \"separate\". End it with a slash.",
 			"type": "string"
 		},
 		"sourceMapFileName": {
-			"description": "File name for the source map comment when sourceMapMode is \"separate\".",
+			"description": "Ignored by this extension, which names the map after the output file: app.obfuscated.js.map.",
 			"type": "string"
 		},
 		"sourceMapMode": {
-			"description": "inline embeds the source map in the output; separate refers to a .map file.",
+			"description": "separate writes <output>.map next to the output file; inline embeds the map in the output.",
 			"type": "string",
 			"enum": [
 				"inline",

@@ -3,6 +3,8 @@ import { createConfigFile, selectPreset } from './configCommands';
 import { obfuscateFileAs, obfuscateFileToNewFile } from './obfuscateFile';
 import { obfuscateFolders } from './obfuscateFolder';
 import { obfuscateSelection } from './obfuscateSelection';
+import { registerPreview } from './preview';
+import { registerStatusBar } from './statusBar';
 
 export function activate(context: vscode.ExtensionContext): void {
 	const log = vscode.window.createOutputChannel('JS Obfuscator');
@@ -20,6 +22,8 @@ export function activate(context: vscode.ExtensionContext): void {
 		),
 		vscode.commands.registerCommand('jsObfuscator.selectPreset', selectPreset),
 		vscode.commands.registerCommand('jsObfuscator.createConfigFile', createConfigFile),
+		...registerPreview(),
+		...registerStatusBar(),
 	);
 }
 

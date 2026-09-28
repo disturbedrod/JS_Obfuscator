@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
-import { OptionsResolver, getOutputSettings } from './config';
-import { getOutputPath, obfuscateCode } from './obfuscator';
+import { getOutputSettings } from './config';
+import { ObfuscationRun, documentKind, outputFilesFor, writeOutputFiles } from './obfuscation';
+import { getOutputPath } from './obfuscator';
+import { SourceKind } from './pipeline';
 import { displayName, errorMessage, exists } from './util';
 
 /** Writes `<name>.obfuscated.js` next to each file, confirming before overwriting. */
@@ -19,24 +21,22 @@ export function obfuscateFileAs(uri?: vscode.Uri, uris?: vscode.Uri[]): Promise<
  */
 async function obfuscateFiles(uri: vscode.Uri | undefined, uris: vscode.Uri[] | undefined, askForOutput: boolean): Promise<void> {
 	const documents = await resolveDocuments(uri, uris);
-	const resolver = new OptionsResolver();
+	const run = new ObfuscationRun();
 	const written: vscode.Uri[] = [];
 
-	for (const document of documents) {
+	for (const { document, kind } of documents) {
 		try {
-			const { suffix } = getOutputSettings(document.uri);
-			const outputUri = askForOutput || document.isUntitled ? await pickOutputUri(document, suffix) : await siblingOutputUri(document, suffix);
+			const outputUri = askForOutput || document.isUntitled ? await pickOutputUri(document.uri, kind) : await siblingOutputUri(document.uri);
 			if (!outputUri) {
 				continue;
 			}
 
-			const options = await resolver.resolve(document.uri);
 			const obfuscated = await vscode.window.withProgress(
 				{ location: vscode.ProgressLocation.Notification, title: `Obfuscating ${displayName(document.uri)}…` },
-				async () => obfuscateCode(document.getText(), options),
+				() => run.obfuscate(document.uri, document.getText(), kind),
 			);
 
-			await vscode.workspace.fs.writeFile(outputUri, Buffer.from(obfuscated, 'utf8'));
+			await writeOutputFiles(outputFilesFor(obfuscated, outputUri));
 			written.push(outputUri);
 		} catch (err) {
 			vscode.window.showErrorMessage(`JS Obfuscator: could not obfuscate ${displayName(document.uri)}: ${errorMessage(err)}`);
@@ -44,19 +44,23 @@ async function obfuscateFiles(uri: vscode.Uri | undefined, uris: vscode.Uri[] | 
 	}
 
 	if (written.length === 1) {
-		const outputDocument = await vscode.workspace.openTextDocument(written[0]);
-		await vscode.window.showTextDocument(outputDocument, { viewColumn: vscode.ViewColumn.Beside, preview: false });
+		await showOutput(written[0]);
 		vscode.window.showInformationMessage(`JS Obfuscator: wrote ${displayName(written[0])}`);
 	} else if (written.length > 1) {
 		vscode.window.showInformationMessage(`JS Obfuscator: wrote ${written.length} obfuscated files.`);
 	}
 }
 
-async function resolveDocuments(uri: vscode.Uri | undefined, uris: vscode.Uri[] | undefined): Promise<vscode.TextDocument[]> {
+export async function showOutput(uri: vscode.Uri): Promise<void> {
+	const outputDocument = await vscode.workspace.openTextDocument(uri);
+	await vscode.window.showTextDocument(outputDocument, { viewColumn: vscode.ViewColumn.Beside, preview: false });
+}
+
+async function resolveDocuments(uri: vscode.Uri | undefined, uris: vscode.Uri[] | undefined): Promise<{ document: vscode.TextDocument; kind: SourceKind }[]> {
 	if (!uri) {
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
-			vscode.window.showWarningMessage('JS Obfuscator: open a JavaScript file first.');
+			vscode.window.showWarningMessage('JS Obfuscator: open a JavaScript, TypeScript or HTML file first.');
 			return [];
 		}
 		uri = editor.document.uri;
@@ -64,25 +68,28 @@ async function resolveDocuments(uri: vscode.Uri | undefined, uris: vscode.Uri[] 
 
 	const targets = uris?.length ? uris : [uri];
 	// openTextDocument returns the already-open document (with unsaved edits) or loads it from disk without showing it.
-	// Multi-select can include folders or other files; those fail to open or aren't JavaScript and are skipped.
+	// Multi-select can include folders or other files; those fail to open or aren't supported and are skipped.
 	const opened = await Promise.allSettled(targets.map((target) => vscode.workspace.openTextDocument(target)));
-	const documents = opened.flatMap((result) =>
-		result.status === 'fulfilled' && result.value.languageId === 'javascript' ? [result.value] : [],
-	);
+	const documents = opened.flatMap((result) => {
+		const kind = result.status === 'fulfilled' ? documentKind(result.value) : undefined;
+		return result.status === 'fulfilled' && kind ? [{ document: result.value, kind }] : [];
+	});
 
 	if (documents.length < targets.length) {
 		const skipped = targets.length - documents.length;
 		vscode.window.showWarningMessage(
 			documents.length === 0
-				? 'JS Obfuscator: the selected file is not JavaScript.'
-				: `JS Obfuscator: skipped ${skipped} item(s) that are not JavaScript files.`,
+				? 'JS Obfuscator: the selected file is not JavaScript, TypeScript or HTML. TypeScript declaration files (.d.ts) have no code to obfuscate.'
+				: `JS Obfuscator: skipped ${skipped} item(s) that are not JavaScript, TypeScript or HTML files.`,
 		);
 	}
 	return documents;
 }
 
-async function siblingOutputUri(document: vscode.TextDocument, suffix: string): Promise<vscode.Uri | undefined> {
-	const outputUri = document.uri.with({ path: getOutputPath(document.uri.path, suffix) });
+/** `<name><suffix>.<ext>` next to `source`, or undefined if it exists and the user declines to overwrite it. */
+export async function siblingOutputUri(source: vscode.Uri): Promise<vscode.Uri | undefined> {
+	const { suffix } = getOutputSettings(source);
+	const outputUri = source.with({ path: getOutputPath(source.path, suffix) });
 
 	if (await exists(outputUri)) {
 		const overwrite = 'Overwrite';
@@ -100,10 +107,12 @@ async function siblingOutputUri(document: vscode.TextDocument, suffix: string): 
 }
 
 /** Save dialog, suggesting the sibling path; the OS dialog handles overwrite confirmation. */
-function pickOutputUri(document: vscode.TextDocument, suffix: string): Thenable<vscode.Uri | undefined> {
+export function pickOutputUri(source: vscode.Uri, kind: SourceKind): Thenable<vscode.Uri | undefined> {
+	const untitled = source.scheme === 'untitled';
+	const { suffix } = getOutputSettings(source);
 	return vscode.window.showSaveDialog({
-		title: `Save Obfuscated ${document.isUntitled ? 'JavaScript' : displayName(document.uri)}`,
-		defaultUri: document.isUntitled ? undefined : document.uri.with({ path: getOutputPath(document.uri.path, suffix) }),
-		filters: { JavaScript: ['js', 'mjs', 'cjs'] },
+		title: `Save Obfuscated ${untitled ? (kind === 'html' ? 'HTML' : 'JavaScript') : displayName(source)}`,
+		defaultUri: untitled ? undefined : source.with({ path: getOutputPath(source.path, suffix) }),
+		filters: kind === 'html' ? { HTML: ['html', 'htm'] } : { JavaScript: ['js', 'mjs', 'cjs'] },
 	});
 }

@@ -23,7 +23,7 @@ const DESCRIPTIONS = {
 	identifiersPrefix: 'Prefix added to every renamed global identifier.',
 	identifiersDictionary: 'Names used by the dictionary identifier names generator.',
 	ignoreImports: 'Leave the module paths in require() and import() calls untransformed.',
-	inputFileName: 'Name of the source file, used in source maps.',
+	inputFileName: 'Name of the source file in source maps. Set by this extension to the original file\'s path.',
 	log: 'Log obfuscation details to the console.',
 	numbersToExpressions: 'Replace number literals with equivalent arithmetic expressions.',
 	renameGlobals: 'Also rename global variables and functions. Breaks code in other files (or around a selection) that uses them by name.',
@@ -34,10 +34,10 @@ const DESCRIPTIONS = {
 	seed: 'Random seed. The same seed and input give the same output; 0 picks a random seed each run.',
 	selfDefending: 'Make the code stop working if it is reformatted or beautified. Do not modify the output afterwards.',
 	simplify: 'Simplify code while obfuscating, giving shorter expressions.',
-	sourceMap: 'Generate a source map. Only sourceMapMode "inline" is useful here: this extension does not write separate .map files.',
-	sourceMapBaseUrl: 'Base URL for the source map comment when sourceMapMode is "separate".',
-	sourceMapFileName: 'File name for the source map comment when sourceMapMode is "separate".',
-	sourceMapMode: 'inline embeds the source map in the output; separate refers to a .map file.',
+	sourceMap: 'Generate a source map pointing back at the original file (the .ts file for TypeScript). Not for HTML pages or selections. Keep maps private: they undo the obfuscation.',
+	sourceMapBaseUrl: 'URL prepended to the map file name in the sourceMappingURL comment when sourceMapMode is "separate". End it with a slash.',
+	sourceMapFileName: 'Ignored by this extension, which names the map after the output file: app.obfuscated.js.map.',
+	sourceMapMode: 'separate writes <output>.map next to the output file; inline embeds the map in the output.',
 	sourceMapSourcesMode: 'Whether the source map embeds the original sources (sources-content) or only their names (sources).',
 	splitStrings: 'Split string literals into chunks of splitStringsChunkLength characters.',
 	splitStringsChunkLength: 'Chunk length used by splitStrings.',
@@ -95,6 +95,8 @@ const SETTINGS = [
 	'selfDefending',
 	'disableConsoleOutput',
 	'debugProtection',
+	'sourceMap',
+	'sourceMapMode',
 ];
 
 // Not API options: the CLI reads them, the API ignores them. Kept in sync with CLI_ONLY_OPTIONS in src/obfuscator.ts.
@@ -188,8 +190,14 @@ const general = {
 		items: { type: 'string' },
 		default: ['**/node_modules/**', '**/.git/**'],
 		markdownDescription:
-			'Glob patterns skipped by **Obfuscate All JavaScript in Folder**. With more than one entry, patterns cannot contain `{}` themselves; add separate entries instead.',
+			'Glob patterns skipped by **Obfuscate All JavaScript in Folder**, such as `**/*.html` to leave HTML pages out. With more than one entry, patterns cannot contain `{}` themselves; add separate entries instead.',
 		order: 3,
+	},
+	'jsObfuscator.statusBar.enabled': {
+		type: 'boolean',
+		default: true,
+		markdownDescription: 'Show the preset that applies to the active JavaScript, TypeScript or HTML file in the status bar.',
+		order: 4,
 	},
 };
 const options = Object.fromEntries(

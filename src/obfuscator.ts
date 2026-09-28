@@ -67,10 +67,21 @@ export function obfuscateCode(source: string, options: ObfuscatorOptions = build
 	return JavaScriptObfuscator.obfuscate(source, options).getObfuscatedCode();
 }
 
-/** URI-style (POSIX) path: `dir/app.js` -> `dir/app.obfuscated.js` (extension preserved, so `.mjs`/`.cjs` keep their module type). */
+/** TypeScript extensions and the JavaScript extension their output gets, so `.mts`/`.cts` keep their module type. */
+const TS_OUTPUT_EXTENSIONS: Record<string, string> = { '.ts': '.js', '.mts': '.mjs', '.cts': '.cjs' };
+
+/** Extension of the obfuscated output for an input extension: TypeScript becomes JavaScript, anything else is kept. */
+export function getOutputExtension(ext: string): string {
+	return TS_OUTPUT_EXTENSIONS[ext.toLowerCase()] ?? (ext || '.js');
+}
+
+/**
+ * URI-style (POSIX) path: `dir/app.js` -> `dir/app.obfuscated.js` (extension preserved, so `.mjs`/`.cjs` keep their module type).
+ * TypeScript becomes JavaScript: `app.ts` -> `app.obfuscated.js`.
+ */
 export function getOutputPath(inputPath: string, suffix: string = DEFAULT_OUTPUT_SUFFIX): string {
 	const { dir, name, ext } = path.parse(inputPath);
-	return path.join(dir, `${name}${suffix}${ext || '.js'}`);
+	return path.join(dir, `${name}${suffix}${getOutputExtension(ext)}`);
 }
 
 /**
@@ -82,7 +93,8 @@ export function getMirroredOutputPath(root: string, file: string, outputFolder: 
 	if (!relative || isOutside(relative)) {
 		return undefined;
 	}
-	return path.join(root, outputFolder, relative);
+	const { dir, name, ext } = path.parse(relative);
+	return path.join(root, outputFolder, dir, `${name}${getOutputExtension(ext)}`);
 }
 
 /** True for paths inside `<root>/<outputFolder>`, so batch runs never re-obfuscate their own output. */
@@ -95,8 +107,8 @@ function isOutside(relative: string): boolean {
 	return relative === '..' || relative.startsWith('../') || path.isAbsolute(relative);
 }
 
-/** True for files written by the single-file command, such as `app.obfuscated.js` for suffix `.obfuscated`. */
+/** True for files written by the single-file command, such as `app.obfuscated.js` or `index.obfuscated.html` for suffix `.obfuscated`. */
 export function hasOutputSuffix(file: string, suffix: string = DEFAULT_OUTPUT_SUFFIX): boolean {
 	const { name, ext } = path.parse(file);
-	return /^\.[cm]?js$/.test(ext) && name.endsWith(suffix);
+	return /^\.([cm]?js|html?)$/i.test(ext) && name.endsWith(suffix);
 }
