@@ -1,20 +1,20 @@
 import * as vscode from 'vscode';
-import { OUTPUT_FOLDER, OUTPUT_SUFFIX, getMirroredOutputPath, isInOutputFolder, obfuscateCode } from './obfuscator';
+import { OptionsResolver, getOutputSettings } from './config';
+import { getMirroredOutputPath, hasOutputSuffix, isInOutputFolder, obfuscateCode } from './obfuscator';
 import { displayName, errorMessage, readSource } from './util';
 
 const JS_GLOB = '**/*.{js,mjs,cjs}';
-const EXCLUDE_GLOB = '**/{node_modules,.git}/**';
 
 interface Job {
 	source: vscode.Uri;
 	output: vscode.Uri;
-	/** Folder the output is mirrored relative to: the containing workspace folder, else the selected folder. */
-	root: vscode.Uri;
+	/** `<root>/<output folder>`, where root is the containing workspace folder, else the selected folder. */
+	outputRoot: vscode.Uri;
 }
 
 /**
  * Obfuscates every JavaScript file under the given folders (Explorer context menu) or under every
- * workspace folder (Command Palette), mirroring the results into `<workspace folder>/obfuscated/`.
+ * workspace folder (Command Palette), mirroring the results into `<workspace folder>/<jsObfuscator.output.folder>/`.
  */
 export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.Uri, uris?: vscode.Uri[]): Promise<void> {
 	const scopes = uri ? (uris?.length ? uris : [uri]) : (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri);
@@ -23,13 +23,19 @@ export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.U
 		return;
 	}
 
-	const jobs = await collectJobs(scopes);
+	let jobs: Job[];
+	try {
+		jobs = await collectJobs(scopes);
+	} catch (err) {
+		vscode.window.showErrorMessage(`JS Obfuscator: ${errorMessage(err)}`);
+		return;
+	}
 	if (jobs.length === 0) {
 		vscode.window.showInformationMessage('JS Obfuscator: no JavaScript files found.');
 		return;
 	}
 
-	const outputRoots = [...new Set(jobs.map((job) => `${displayName(outputRootOf(job.root))}/`))];
+	const outputRoots = [...new Set(jobs.map((job) => `${displayName(job.outputRoot)}/`))];
 	const confirm = 'Obfuscate';
 	const choice = await vscode.window.showWarningMessage(
 		`Obfuscate ${jobs.length} JavaScript file${jobs.length === 1 ? '' : 's'} into ${outputRoots.join(', ')}?`,
@@ -43,6 +49,7 @@ export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.U
 	log.appendLine(`\n[${new Date().toLocaleString()}] Obfuscating ${jobs.length} file(s)`);
 	const failures: string[] = [];
 	let done = 0;
+	const resolver = new OptionsResolver();
 
 	const cancelled = await vscode.window.withProgress(
 		{ location: vscode.ProgressLocation.Notification, title: 'Obfuscating JavaScript', cancellable: true },
@@ -56,7 +63,8 @@ export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.U
 				await new Promise((resolve) => setImmediate(resolve));
 
 				try {
-					const obfuscated = obfuscateCode(await readSource(job.source));
+					const options = await resolver.resolve(job.source);
+					const obfuscated = obfuscateCode(await readSource(job.source), options);
 					await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(job.output, '..'));
 					await vscode.workspace.fs.writeFile(job.output, Buffer.from(obfuscated, 'utf8'));
 					log.appendLine(`  ok    ${displayName(job.source)} -> ${displayName(job.output)}`);
@@ -81,7 +89,7 @@ export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.U
 	if (action === showLog) {
 		log.show();
 	} else if (action === reveal) {
-		await vscode.commands.executeCommand('revealInExplorer', outputRootOf(jobs[0].root));
+		await vscode.commands.executeCommand('revealInExplorer', jobs[0].outputRoot);
 	}
 }
 
@@ -89,23 +97,28 @@ async function collectJobs(scopes: vscode.Uri[]): Promise<Job[]> {
 	const jobs = new Map<string, Job>();
 	for (const scope of scopes) {
 		const root = vscode.workspace.getWorkspaceFolder(scope)?.uri ?? scope;
-		const files = await vscode.workspace.findFiles(new vscode.RelativePattern(scope, JS_GLOB), EXCLUDE_GLOB);
+		const { suffix, folder, exclude } = getOutputSettings(root);
+		const outputRoot = vscode.Uri.joinPath(root, folder);
+		const files = await vscode.workspace.findFiles(new vscode.RelativePattern(scope, JS_GLOB), combineGlobs(exclude));
 		for (const source of files) {
-			const outputPath = getMirroredOutputPath(root.path, source.path);
-			if (!outputPath || isInOutputFolder(root.path, source.path) || isSingleFileOutput(source)) {
+			const outputPath = getMirroredOutputPath(root.path, source.path, folder);
+			// Skip our own output: the mirror folder, and `app.obfuscated.js` files from the single-file command.
+			if (!outputPath || isInOutputFolder(root.path, source.path, folder) || hasOutputSuffix(source.path, suffix)) {
 				continue;
 			}
-			jobs.set(source.toString(), { source, output: root.with({ path: outputPath }), root });
+			jobs.set(source.toString(), { source, output: root.with({ path: outputPath }), outputRoot });
 		}
 	}
 	return [...jobs.values()].sort((a, b) => a.source.path.localeCompare(b.source.path));
 }
 
-/** Output of the single-file command (`app.obfuscated.js`); obfuscating it again would be pointless. */
-function isSingleFileOutput(uri: vscode.Uri): boolean {
-	return /\.[cm]?js$/.test(uri.path) && uri.path.replace(/\.[cm]?js$/, '').endsWith(OUTPUT_SUFFIX);
-}
-
-function outputRootOf(root: vscode.Uri): vscode.Uri {
-	return vscode.Uri.joinPath(root, OUTPUT_FOLDER);
+/**
+ * findFiles takes a single exclude glob, so several are joined as `{a,b}`. An empty list gives null, meaning no excludes.
+ * VS Code globs don't nest braces, so only a lone pattern may use `{}` itself.
+ */
+function combineGlobs(globs: string[]): string | null {
+	if (globs.length === 0) {
+		return null;
+	}
+	return globs.length === 1 ? globs[0] : `{${globs.join(',')}}`;
 }
