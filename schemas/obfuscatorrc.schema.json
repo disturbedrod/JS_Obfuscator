@@ -1,0 +1,310 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "JS Obfuscator configuration (.obfuscatorrc.json)",
+	"description": "javascript-obfuscator options for this folder and its subfolders. They override the jsObfuscator.* settings.",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+		"$schema": {
+			"type": "string"
+		},
+		"preset": {
+			"description": "Base preset; the options in this file are applied on top of it. Overrides the jsObfuscator.preset setting.",
+			"enum": [
+				"default",
+				"low",
+				"medium",
+				"high"
+			]
+		},
+		"optionsPreset": {
+			"description": "javascript-obfuscator preset name, accepted as an alternative to \"preset\".",
+			"enum": [
+				"default",
+				"low-obfuscation",
+				"medium-obfuscation",
+				"high-obfuscation"
+			]
+		},
+		"advertisement": {
+			"description": "Print the JavaScript Obfuscator Pro advert to the console. Turned off by this extension.",
+			"type": "boolean"
+		},
+		"compact": {
+			"description": "Write the output on a single line.",
+			"type": "boolean"
+		},
+		"controlFlowFlattening": {
+			"description": "Restructure the code flow so it is harder to follow. Noticeably slows the code down.",
+			"type": "boolean"
+		},
+		"controlFlowFlatteningThreshold": {
+			"description": "Fraction (0 to 1) of code affected by control-flow flattening.",
+			"type": "number",
+			"minimum": 0,
+			"maximum": 1
+		},
+		"deadCodeInjection": {
+			"description": "Insert blocks of code that never run. Greatly increases output size.",
+			"type": "boolean"
+		},
+		"deadCodeInjectionThreshold": {
+			"description": "Fraction (0 to 1) of code affected by dead-code injection.",
+			"type": "number",
+			"minimum": 0,
+			"maximum": 1
+		},
+		"debugProtection": {
+			"description": "Make browser developer tools hard to use on the code.",
+			"type": "boolean"
+		},
+		"debugProtectionInterval": {
+			"description": "Milliseconds between debug-protection checks; 0 disables the interval. Needs debugProtection.",
+			"type": "integer",
+			"minimum": 0
+		},
+		"disableConsoleOutput": {
+			"description": "Replace console.log, console.warn and the other console methods with empty functions.",
+			"type": "boolean"
+		},
+		"domainLock": {
+			"description": "Only let the code run on these domains (a leading dot includes subdomains).",
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"domainLockRedirectUrl": {
+			"description": "Where the browser is sent if the code runs on a domain not listed in domainLock.",
+			"type": "string"
+		},
+		"forceTransformStrings": {
+			"description": "Strings (or regular expressions matching strings) that are always transformed, whatever stringArrayThreshold says.",
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"identifierNamesCache": {
+			"description": "Name mapping shared between runs so separately obfuscated files agree on global names. null disables it.",
+			"type": [
+				"object",
+				"null"
+			]
+		},
+		"identifierNamesGenerator": {
+			"description": "Style of new names: hexadecimal (_0xab12cd), mangled (a, b, c), mangled-shuffled, or dictionary (from identifiersDictionary).",
+			"type": "string",
+			"enum": [
+				"dictionary",
+				"hexadecimal",
+				"mangled",
+				"mangled-shuffled"
+			]
+		},
+		"identifiersPrefix": {
+			"description": "Prefix added to every renamed global identifier.",
+			"type": "string"
+		},
+		"identifiersDictionary": {
+			"description": "Names used by the dictionary identifier names generator.",
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"ignoreImports": {
+			"description": "Leave the module paths in require() and import() calls untransformed.",
+			"type": "boolean"
+		},
+		"inputFileName": {
+			"description": "Name of the source file in source maps. Set by this extension to the original file's path.",
+			"type": "string"
+		},
+		"log": {
+			"description": "Log obfuscation details to the console.",
+			"type": "boolean"
+		},
+		"numbersToExpressions": {
+			"description": "Replace number literals with equivalent arithmetic expressions.",
+			"type": "boolean"
+		},
+		"renameGlobals": {
+			"description": "Also rename global variables and functions. Breaks code in other files (or around a selection) that uses them by name.",
+			"type": "boolean"
+		},
+		"renameProperties": {
+			"description": "Rename object property names. Can break code; test the output carefully.",
+			"type": "boolean"
+		},
+		"renamePropertiesMode": {
+			"description": "safe skips properties that are risky to rename; unsafe renames everything it can.",
+			"type": "string",
+			"enum": [
+				"safe",
+				"unsafe"
+			]
+		},
+		"reservedNames": {
+			"description": "Regular expressions; identifiers matching any of them are never renamed.",
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"reservedStrings": {
+			"description": "Regular expressions; strings matching any of them are never transformed.",
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"stringArrayRotate": {
+			"description": "Rotate the string array by a random amount.",
+			"type": "boolean"
+		},
+		"seed": {
+			"description": "Random seed. The same seed and input give the same output; 0 picks a random seed each run.",
+			"type": [
+				"number",
+				"string"
+			]
+		},
+		"selfDefending": {
+			"description": "Make the code stop working if it is reformatted or beautified. Do not modify the output afterwards.",
+			"type": "boolean"
+		},
+		"stringArrayShuffle": {
+			"description": "Shuffle the items in the string array.",
+			"type": "boolean"
+		},
+		"simplify": {
+			"description": "Simplify code while obfuscating, giving shorter expressions.",
+			"type": "boolean"
+		},
+		"sourceMap": {
+			"description": "Generate a source map pointing back at the original file (the .ts file for TypeScript). Not for HTML pages or selections. Keep maps private: they undo the obfuscation.",
+			"type": "boolean"
+		},
+		"sourceMapBaseUrl": {
+			"description": "URL prepended to the map file name in the sourceMappingURL comment when sourceMapMode is \"separate\". End it with a slash.",
+			"type": "string"
+		},
+		"sourceMapFileName": {
+			"description": "Ignored by this extension, which names the map after the output file: app.obfuscated.js.map.",
+			"type": "string"
+		},
+		"sourceMapMode": {
+			"description": "separate writes <output>.map next to the output file; inline embeds the map in the output.",
+			"type": "string",
+			"enum": [
+				"inline",
+				"separate"
+			]
+		},
+		"sourceMapSourcesMode": {
+			"description": "Whether the source map embeds the original sources (sources-content) or only their names (sources).",
+			"type": "string",
+			"enum": [
+				"sources",
+				"sources-content"
+			]
+		},
+		"splitStrings": {
+			"description": "Split string literals into chunks of splitStringsChunkLength characters.",
+			"type": "boolean"
+		},
+		"splitStringsChunkLength": {
+			"description": "Chunk length used by splitStrings.",
+			"type": "integer",
+			"minimum": 1
+		},
+		"stringArray": {
+			"description": "Move string literals into a shared array and replace them with lookups.",
+			"type": "boolean"
+		},
+		"stringArrayCallsTransform": {
+			"description": "Also obfuscate the calls that read from the string array.",
+			"type": "boolean"
+		},
+		"stringArrayCallsTransformThreshold": {
+			"description": "Fraction (0 to 1) of string array calls transformed by stringArrayCallsTransform.",
+			"type": "number",
+			"minimum": 0,
+			"maximum": 1
+		},
+		"stringArrayEncoding": {
+			"description": "How strings in the string array are encoded: none, base64, or rc4 (slower). With several values, each string gets one at random.",
+			"type": "array",
+			"items": {
+				"type": "string",
+				"enum": [
+					"none",
+					"base64",
+					"rc4"
+				]
+			}
+		},
+		"stringArrayIndexesType": {
+			"description": "Number format of the indexes into the string array.",
+			"type": "array",
+			"items": {
+				"type": "string",
+				"enum": [
+					"hexadecimal-number",
+					"hexadecimal-numeric-string"
+				]
+			}
+		},
+		"stringArrayIndexShift": {
+			"description": "Add a random shift to string array indexes.",
+			"type": "boolean"
+		},
+		"stringArrayWrappersChainedCalls": {
+			"description": "Let string array wrappers call each other.",
+			"type": "boolean"
+		},
+		"stringArrayWrappersCount": {
+			"description": "Number of string array wrappers per scope.",
+			"type": "integer",
+			"minimum": 0
+		},
+		"stringArrayWrappersParametersMaxCount": {
+			"description": "Maximum number of parameters of function-type string array wrappers.",
+			"type": "integer",
+			"minimum": 2
+		},
+		"stringArrayWrappersType": {
+			"description": "Whether string array wrappers are variables or functions.",
+			"type": "string",
+			"enum": [
+				"variable",
+				"function"
+			]
+		},
+		"stringArrayThreshold": {
+			"description": "Fraction (0 to 1) of string literals moved into the string array.",
+			"type": "number",
+			"minimum": 0,
+			"maximum": 1
+		},
+		"target": {
+			"description": "Where the code runs: browser, browser-no-eval (no eval-based helpers), node, or service-worker.",
+			"type": "string",
+			"enum": [
+				"browser",
+				"browser-no-eval",
+				"node",
+				"service-worker"
+			]
+		},
+		"transformObjectKeys": {
+			"description": "Obfuscate the keys of object literals.",
+			"type": "boolean"
+		},
+		"unicodeEscapeSequence": {
+			"description": "Write strings as unicode escape sequences. Greatly increases output size.",
+			"type": "boolean"
+		}
+	}
+}

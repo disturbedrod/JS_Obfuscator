@@ -1,7 +1,7 @@
 {
   "name": "js-obfuscator",
   "displayName": "JS Obfuscator",
-  "description": "Obfuscate JavaScript files and selections from inside VS Code.",
+  "description": "Obfuscate JavaScript, TypeScript and inline HTML scripts from inside VS Code.",
   "version": "0.0.1",
   "publisher": "your-publisher-id",
   "license": "UNLICENSED",
@@ -15,10 +15,17 @@
     "javascript",
     "obfuscate",
     "obfuscator",
-    "minify"
+    "minify",
+    "typescript",
+    "html",
+    "source map"
   ],
   "main": "./out/extension.js",
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:html"
+  ],
   "contributes": {
     "commands": [
       {
@@ -28,8 +35,40 @@
         "icon": "$(lock)"
       },
       {
+        "command": "jsObfuscator.obfuscateFileAs",
+        "title": "Obfuscate File As...",
+        "category": "JS Obfuscator"
+      },
+      {
+        "command": "jsObfuscator.previewObfuscation",
+        "title": "Preview Obfuscation",
+        "category": "JS Obfuscator",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "jsObfuscator.savePreview",
+        "title": "Save Obfuscated Output",
+        "category": "JS Obfuscator",
+        "icon": "$(save)"
+      },
+      {
+        "command": "jsObfuscator.obfuscateSelection",
+        "title": "Obfuscate Selection",
+        "category": "JS Obfuscator"
+      },
+      {
         "command": "jsObfuscator.obfuscateFolder",
         "title": "Obfuscate All JavaScript in Folder",
+        "category": "JS Obfuscator"
+      },
+      {
+        "command": "jsObfuscator.selectPreset",
+        "title": "Select Obfuscation Preset",
+        "category": "JS Obfuscator"
+      },
+      {
+        "command": "jsObfuscator.createConfigFile",
+        "title": "Create .obfuscatorrc.json",
         "category": "JS Obfuscator"
       }
     ],
@@ -37,52 +76,348 @@
       "commandPalette": [
         {
           "command": "jsObfuscator.obfuscateFileToNewFile",
-          "when": "editorLangId == javascript"
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/"
+        },
+        {
+          "command": "jsObfuscator.obfuscateFileAs",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/"
+        },
+        {
+          "command": "jsObfuscator.previewObfuscation",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/"
+        },
+        {
+          "command": "jsObfuscator.savePreview",
+          "when": "resourceScheme == js-obfuscator-preview"
+        },
+        {
+          "command": "jsObfuscator.obfuscateSelection",
+          "when": "editorLangId == javascript && editorHasSelection"
         },
         {
           "command": "jsObfuscator.obfuscateFolder",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "jsObfuscator.createConfigFile",
           "when": "workspaceFolderCount > 0"
         }
       ],
       "editor/context": [
         {
-          "command": "jsObfuscator.obfuscateFileToNewFile",
-          "when": "editorLangId == javascript",
+          "command": "jsObfuscator.obfuscateSelection",
+          "when": "editorLangId == javascript && editorHasSelection",
           "group": "1_modification@100"
+        },
+        {
+          "command": "jsObfuscator.obfuscateFileToNewFile",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/",
+          "group": "1_modification@101"
+        },
+        {
+          "command": "jsObfuscator.obfuscateFileAs",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/",
+          "group": "1_modification@102"
+        },
+        {
+          "command": "jsObfuscator.previewObfuscation",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/",
+          "group": "1_modification@103"
         }
       ],
       "editor/title": [
         {
           "command": "jsObfuscator.obfuscateFileToNewFile",
-          "when": "editorLangId == javascript",
+          "when": "editorLangId =~ /^(javascript|typescript|html)$/",
+          "group": "navigation@100"
+        },
+        {
+          "command": "jsObfuscator.savePreview",
+          "when": "resourceScheme == js-obfuscator-preview",
           "group": "navigation@100"
         }
       ],
       "explorer/context": [
         {
+          "command": "jsObfuscator.obfuscateFileToNewFile",
+          "when": "resourceLangId =~ /^(javascript|typescript|html)$/ && !explorerResourceIsFolder",
+          "group": "7_modification@100"
+        },
+        {
+          "command": "jsObfuscator.obfuscateFileAs",
+          "when": "resourceLangId =~ /^(javascript|typescript|html)$/ && !explorerResourceIsFolder",
+          "group": "7_modification@101"
+        },
+        {
+          "command": "jsObfuscator.previewObfuscation",
+          "when": "resourceLangId =~ /^(javascript|typescript|html)$/ && !explorerResourceIsFolder",
+          "group": "7_modification@102"
+        },
+        {
           "command": "jsObfuscator.obfuscateFolder",
           "when": "explorerResourceIsFolder",
-          "group": "7_modification@100"
+          "group": "7_modification@103"
         }
       ]
-    }
+    },
+    "configuration": [
+      {
+        "id": "jsObfuscator",
+        "title": "JS Obfuscator",
+        "properties": {
+          "jsObfuscator.preset": {
+            "type": "string",
+            "enum": [
+              "default",
+              "low",
+              "medium",
+              "high"
+            ],
+            "default": "default",
+            "enumDescriptions": [
+              "Renamed identifiers, all strings base64-encoded. Fast, small output.",
+              "Adds self-defending code and disables console output.",
+              "Adds control-flow flattening, dead code and split strings. Slower, larger output.",
+              "Adds rc4 string encoding and debug protection. Much slower and larger. Browser code only: debug protection keeps a timer running, so Node.js processes never exit."
+            ],
+            "markdownDescription": "Base obfuscation preset. The `#jsObfuscator.options.*#` settings you change, then `.obfuscatorrc.json`, are applied on top of it.",
+            "order": 0
+          },
+          "jsObfuscator.output.suffix": {
+            "type": "string",
+            "default": ".obfuscated",
+            "markdownDescription": "Added before the extension by **Obfuscate File to New File**: `app.js` becomes `app.obfuscated.js`.",
+            "order": 1
+          },
+          "jsObfuscator.output.folder": {
+            "type": "string",
+            "default": "obfuscated",
+            "markdownDescription": "Folder, relative to the workspace folder, that **Obfuscate All JavaScript in Folder** mirrors its output into.",
+            "order": 2
+          },
+          "jsObfuscator.exclude": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "**/node_modules/**",
+              "**/.git/**"
+            ],
+            "markdownDescription": "Glob patterns skipped by **Obfuscate All JavaScript in Folder**, such as `**/*.html` to leave HTML pages out. With more than one entry, patterns cannot contain `{}` themselves; add separate entries instead.",
+            "order": 3
+          },
+          "jsObfuscator.statusBar.enabled": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Show the preset that applies to the active JavaScript, TypeScript or HTML file in the status bar.",
+            "order": 4
+          }
+        }
+      },
+      {
+        "id": "jsObfuscator.options",
+        "title": "Obfuscation Options",
+        "properties": {
+          "jsObfuscator.options.target": {
+            "type": "string",
+            "enum": [
+              "browser",
+              "browser-no-eval",
+              "node",
+              "service-worker"
+            ],
+            "default": "browser",
+            "markdownDescription": "Where the code runs: browser, browser-no-eval (no eval-based helpers), node, or service-worker.\n\nOnly overrides the preset when you set it.",
+            "order": 0
+          },
+          "jsObfuscator.options.compact": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Write the output on a single line.\n\nOnly overrides the preset when you set it.",
+            "order": 1
+          },
+          "jsObfuscator.options.identifierNamesGenerator": {
+            "type": "string",
+            "enum": [
+              "dictionary",
+              "hexadecimal",
+              "mangled",
+              "mangled-shuffled"
+            ],
+            "default": "hexadecimal",
+            "markdownDescription": "Style of new names: hexadecimal (_0xab12cd), mangled (a, b, c), mangled-shuffled, or dictionary (from identifiersDictionary).\n\nOnly overrides the preset when you set it.",
+            "order": 2
+          },
+          "jsObfuscator.options.renameGlobals": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Also rename global variables and functions. Breaks code in other files (or around a selection) that uses them by name.\n\nOnly overrides the preset when you set it.",
+            "order": 3
+          },
+          "jsObfuscator.options.reservedNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "markdownDescription": "Regular expressions; identifiers matching any of them are never renamed.\n\nOnly overrides the preset when you set it.",
+            "order": 4
+          },
+          "jsObfuscator.options.reservedStrings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "markdownDescription": "Regular expressions; strings matching any of them are never transformed.\n\nOnly overrides the preset when you set it.",
+            "order": 5
+          },
+          "jsObfuscator.options.stringArray": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Move string literals into a shared array and replace them with lookups.\n\nOnly overrides the preset when you set it.",
+            "order": 6
+          },
+          "jsObfuscator.options.stringArrayEncoding": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "none",
+                "base64",
+                "rc4"
+              ]
+            },
+            "default": [
+              "base64"
+            ],
+            "markdownDescription": "How strings in the string array are encoded: none, base64, or rc4 (slower). With several values, each string gets one at random.\n\nOnly overrides the preset when you set it.",
+            "order": 7
+          },
+          "jsObfuscator.options.stringArrayThreshold": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1,
+            "markdownDescription": "Fraction (0 to 1) of string literals moved into the string array.\n\nOnly overrides the preset when you set it.",
+            "order": 8
+          },
+          "jsObfuscator.options.splitStrings": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Split string literals into chunks of splitStringsChunkLength characters.\n\nOnly overrides the preset when you set it.",
+            "order": 9
+          },
+          "jsObfuscator.options.controlFlowFlattening": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Restructure the code flow so it is harder to follow. Noticeably slows the code down.\n\nOnly overrides the preset when you set it.",
+            "order": 10
+          },
+          "jsObfuscator.options.controlFlowFlatteningThreshold": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.75,
+            "markdownDescription": "Fraction (0 to 1) of code affected by control-flow flattening.\n\nOnly overrides the preset when you set it.",
+            "order": 11
+          },
+          "jsObfuscator.options.deadCodeInjection": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Insert blocks of code that never run. Greatly increases output size.\n\nOnly overrides the preset when you set it.",
+            "order": 12
+          },
+          "jsObfuscator.options.deadCodeInjectionThreshold": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.4,
+            "markdownDescription": "Fraction (0 to 1) of code affected by dead-code injection.\n\nOnly overrides the preset when you set it.",
+            "order": 13
+          },
+          "jsObfuscator.options.numbersToExpressions": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Replace number literals with equivalent arithmetic expressions.\n\nOnly overrides the preset when you set it.",
+            "order": 14
+          },
+          "jsObfuscator.options.transformObjectKeys": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Obfuscate the keys of object literals.\n\nOnly overrides the preset when you set it.",
+            "order": 15
+          },
+          "jsObfuscator.options.unicodeEscapeSequence": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Write strings as unicode escape sequences. Greatly increases output size.\n\nOnly overrides the preset when you set it.",
+            "order": 16
+          },
+          "jsObfuscator.options.selfDefending": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Make the code stop working if it is reformatted or beautified. Do not modify the output afterwards.\n\nOnly overrides the preset when you set it.",
+            "order": 17
+          },
+          "jsObfuscator.options.disableConsoleOutput": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Replace console.log, console.warn and the other console methods with empty functions.\n\nOnly overrides the preset when you set it.",
+            "order": 18
+          },
+          "jsObfuscator.options.debugProtection": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Make browser developer tools hard to use on the code.\n\nOnly overrides the preset when you set it.",
+            "order": 19
+          },
+          "jsObfuscator.options.sourceMap": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Generate a source map pointing back at the original file (the .ts file for TypeScript). Not for HTML pages or selections. Keep maps private: they undo the obfuscation.\n\nOnly overrides the preset when you set it.",
+            "order": 20
+          },
+          "jsObfuscator.options.sourceMapMode": {
+            "type": "string",
+            "enum": [
+              "inline",
+              "separate"
+            ],
+            "default": "separate",
+            "markdownDescription": "separate writes <output>.map next to the output file; inline embeds the map in the output.\n\nOnly overrides the preset when you set it.",
+            "order": 21
+          }
+        }
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": ".obfuscatorrc.json",
+        "url": "./schemas/obfuscatorrc.schema.json"
+      }
+    ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run typecheck && npm run bundle -- --minify",
     "compile": "npm run typecheck && npm run bundle",
     "typecheck": "tsc -p ./ --noEmit",
     "bundle": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node20 --sourcemap",
     "watch": "npm run bundle -- --watch=forever",
-    "package": "vsce package"
+    "package": "vsce package",
+    "generate-config": "node scripts/generate-config.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.95.0",
     "@vscode/vsce": "^3.0.0",
-    "esbuild": "^0.28.2",
-    "typescript": "^5.6.0"
+    "esbuild": "^0.28.2"
   },
   "dependencies": {
-    "javascript-obfuscator": "^5.8.0"
+    "@jridgewell/remapping": "^2.3.5",
+    "javascript-obfuscator": "^5.8.0",
+    "parse5": "^7.3.0",
+    "typescript": "^5.9.3"
   }
 }
