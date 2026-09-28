@@ -1,0 +1,35 @@
+{
+  "name": "js-obfuscator",
+  "displayName": "JS Obfuscator",
+  "description": "Obfuscate JavaScript files and selections from inside VS Code.",
+  "version": "0.0.1",
+  "publisher": "your-publisher-id",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "javascript",
+    "obfuscate",
+    "obfuscator",
+    "minify"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [],
+  "contributes": {},
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.95.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.6.0"
+  }
+}
