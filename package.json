@@ -19,17 +19,70 @@
   ],
   "main": "./out/extension.js",
   "activationEvents": [],
-  "contributes": {},
+  "contributes": {
+    "commands": [
+      {
+        "command": "jsObfuscator.obfuscateFileToNewFile",
+        "title": "Obfuscate File to New File",
+        "category": "JS Obfuscator",
+        "icon": "$(lock)"
+      },
+      {
+        "command": "jsObfuscator.obfuscateFolder",
+        "title": "Obfuscate All JavaScript in Folder",
+        "category": "JS Obfuscator"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "jsObfuscator.obfuscateFileToNewFile",
+          "when": "editorLangId == javascript"
+        },
+        {
+          "command": "jsObfuscator.obfuscateFolder",
+          "when": "workspaceFolderCount > 0"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "jsObfuscator.obfuscateFileToNewFile",
+          "when": "editorLangId == javascript",
+          "group": "1_modification@100"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "jsObfuscator.obfuscateFileToNewFile",
+          "when": "editorLangId == javascript",
+          "group": "navigation@100"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "jsObfuscator.obfuscateFolder",
+          "when": "explorerResourceIsFolder",
+          "group": "7_modification@100"
+        }
+      ]
+    }
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "compile": "npm run typecheck && npm run bundle",
+    "typecheck": "tsc -p ./ --noEmit",
+    "bundle": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node20 --sourcemap",
+    "watch": "npm run bundle -- --watch=forever",
     "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.95.0",
     "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.28.2",
     "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "javascript-obfuscator": "^5.8.0"
   }
 }
