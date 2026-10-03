@@ -1,11 +1,11 @@
-# JS Obfuscator
+# JS Obfuscator Pro
 
 A Visual Studio Code extension for obfuscating JavaScript, TypeScript and the inline scripts of HTML pages, powered by
 [javascript-obfuscator](https://github.com/javascript-obfuscator/javascript-obfuscator).
 
 ## Commands
 
-All commands are in the Command Palette under **JS Obfuscator**.
+All commands are in the Command Palette under **JS Obfuscator Pro**.
 
 | Command | Where else | Output |
 | --- | --- | --- |
@@ -22,7 +22,7 @@ All commands are in the Command Palette under **JS Obfuscator**.
 
 ### Obfuscate a file
 
-Run **JS Obfuscator: Obfuscate File to New File** on a JavaScript (`.js`, `.mjs`, `.cjs`), TypeScript (`.ts`, `.mts`, `.cts`)
+Run **JS Obfuscator Pro: Obfuscate File to New File** on a JavaScript (`.js`, `.mjs`, `.cjs`), TypeScript (`.ts`, `.mts`, `.cts`)
 or HTML (`.html`, `.htm`) file from:
 
 - the Command Palette (`Cmd/Ctrl+Shift+P`): uses the active editor
@@ -36,7 +36,7 @@ The original file is never modified. If the output file already exists, you are 
 Unsaved changes in an open editor are included, because the extension reads the current editor contents.
 For an unsaved (untitled) editor, you are asked where to save the output.
 
-**JS Obfuscator: Obfuscate File As…** is available from the same places. It does the same thing but asks where to save,
+**JS Obfuscator Pro: Obfuscate File As…** is available from the same places. It does the same thing but asks where to save,
 suggesting `<name>.obfuscated.js`.
 
 ### TypeScript
@@ -66,7 +66,7 @@ unchanged, byte for byte.
 
 ### Preview before saving
 
-**JS Obfuscator: Preview Obfuscation** opens a diff with the original on the left and the obfuscated code on the right.
+**JS Obfuscator Pro: Preview Obfuscation** opens a diff with the original on the left and the obfuscated code on the right.
 Nothing is written. Click the save icon in the preview's title bar (**Save Obfuscated Output**) to write exactly what
 you see to the usual `<name>.obfuscated.js`. You are asked before an existing file is overwritten. Obfuscation is random
 unless `seed` is set, so previewing again gives different output.
@@ -96,7 +96,7 @@ your original code and undoes the obfuscation. Use maps to decode your own error
 
 ### Obfuscate a selection
 
-Select code in a JavaScript editor and run **JS Obfuscator: Obfuscate Selection** from the editor context menu or the
+Select code in a JavaScript editor and run **JS Obfuscator Pro: Obfuscate Selection** from the editor context menu or the
 Command Palette. The selection is replaced with its obfuscated form in a single edit, so one **Undo** restores it.
 Multiple selections (multi-cursor) are supported.
 
@@ -107,7 +107,7 @@ Multiple selections (multi-cursor) are supported.
 
 ### Obfuscate a whole folder or workspace
 
-Run **JS Obfuscator: Obfuscate All JavaScript in Folder** from:
+Run **JS Obfuscator Pro: Obfuscate All JavaScript in Folder** from:
 
 - the Command Palette: processes every folder in the workspace
 - the Explorer context menu on a folder: processes only that folder (multi-select works too)
@@ -122,7 +122,7 @@ at the root of its workspace folder, mirroring the original structure: `src/lib/
   `**/*.html` or `**/*.ts` to `jsObfuscator.exclude`.
 - When `app.ts` and `app.js` sit side by side, both would become `obfuscated/app.js`. The JavaScript file wins, since it
   is usually the build of the other. The skipped TypeScript files are listed in the output panel.
-- Files that fail to parse are skipped and listed in the **JS Obfuscator** output panel; the rest still run.
+- Files that fail to parse are skipped and listed in the **JS Obfuscator Pro** output panel; the rest still run.
 - The run can be cancelled from the progress notification.
 - Existing files in `obfuscated/` are overwritten, but stale files there are not deleted. Delete the folder for a clean build.
 - Every HTML page is written, with or without inline scripts. Other assets (CSS, images, JSON) are not copied.
@@ -133,7 +133,7 @@ at the root of its workspace folder, mirroring the original structure: `src/lib/
 
 ### Presets
 
-Pick a preset with **JS Obfuscator: Select Obfuscation Preset**, or set `jsObfuscator.preset`:
+Pick a preset with **JS Obfuscator Pro: Select Obfuscation Preset**, or set `jsObfuscator.preset`:
 
 | Preset | What it adds | Watch out for |
 | --- | --- | --- |
@@ -162,7 +162,7 @@ Settings left alone use the preset's value.
 
 ### `.obfuscatorrc.json`
 
-For per-project or per-folder options, run **JS Obfuscator: Create .obfuscatorrc.json**, or create the file yourself:
+For per-project or per-folder options, run **JS Obfuscator Pro: Create .obfuscatorrc.json**, or create the file yourself:
 
 ```json
 {
@@ -223,7 +223,7 @@ The extension is bundled with esbuild into `out/extension.js`, so runtime depend
   opens, use **File → Open Folder…** to open the other project. That window remembers the folder for next time. After
   code changes, press **Cmd/Ctrl+R** in it to reload.
 - **As an installed extension:** run `npm run package`, then **Extensions → … → Install from VSIX**, or
-  `code --install-extension js-obfuscator-0.0.1.vsix`. Reinstall after every change.
+  `code --install-extension js-obfuscator-pro-1.0.0.vsix`. Reinstall after every change.
 
 ### Troubleshooting
 

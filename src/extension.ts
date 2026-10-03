@@ -7,7 +7,7 @@ import { registerPreview } from './preview';
 import { registerStatusBar } from './statusBar';
 
 export function activate(context: vscode.ExtensionContext): void {
-	const log = vscode.window.createOutputChannel('JS Obfuscator');
+	const log = vscode.window.createOutputChannel('JS Obfuscator Pro');
 	context.subscriptions.push(
 		log,
 		vscode.commands.registerCommand('jsObfuscator.obfuscateFileToNewFile', (uri?: unknown, uris?: unknown) =>

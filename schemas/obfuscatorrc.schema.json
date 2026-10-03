@@ -1,6 +1,6 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"title": "JS Obfuscator configuration (.obfuscatorrc.json)",
+	"title": "JS Obfuscator Pro configuration (.obfuscatorrc.json)",
 	"description": "javascript-obfuscator options for this folder and its subfolders. They override the jsObfuscator.* settings.",
 	"type": "object",
 	"additionalProperties": false,

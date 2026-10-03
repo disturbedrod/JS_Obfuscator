@@ -1,25 +1,25 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 - 2026-10-02
 
 ### Added
 
-- **JS Obfuscator: Obfuscate File to New File** writes `<name>.obfuscated.js` next to the current file, or next to each
+- **JS Obfuscator Pro: Obfuscate File to New File** writes `<name>.obfuscated.js` next to the current file, or next to each
   JavaScript file selected in the Explorer. The original is never modified, and you confirm before an existing output is overwritten.
-- **JS Obfuscator: Obfuscate File As…** asks where to save the obfuscated file.
-- **JS Obfuscator: Obfuscate Selection** replaces the selected code in place as one undoable edit. Multiple selections are supported.
-- **JS Obfuscator: Obfuscate All JavaScript in Folder** (Command Palette and Explorer folder menu) mirrors obfuscated copies
+- **JS Obfuscator Pro: Obfuscate File As…** asks where to save the obfuscated file.
+- **JS Obfuscator Pro: Obfuscate Selection** replaces the selected code in place as one undoable edit. Multiple selections are supported.
+- **JS Obfuscator Pro: Obfuscate All JavaScript in Folder** (Command Palette and Explorer folder menu) mirrors obfuscated copies
   of every `.js`/`.mjs`/`.cjs` file into `obfuscated/`, with a progress notification, Cancel, and a log of failures in the
-  **JS Obfuscator** output panel.
-- Presets `default`, `low`, `medium` and `high`, and **JS Obfuscator: Select Obfuscation Preset**.
+  **JS Obfuscator Pro** output panel.
+- Presets `default`, `low`, `medium` and `high`, and **JS Obfuscator Pro: Select Obfuscation Preset**.
 - Settings for 20 common obfuscator options (`jsObfuscator.options.*`), the output suffix, the output folder and exclude globs.
 - Per-folder `.obfuscatorrc.json` accepting every javascript-obfuscator option, with completion and validation in the
-  editor, and **JS Obfuscator: Create .obfuscatorrc.json**.
+  editor, and **JS Obfuscator Pro: Create .obfuscatorrc.json**.
 - TypeScript (`.ts`, `.mts`, `.cts`): transpiled with the nearest `tsconfig.json`'s compiler options, then obfuscated
   into `.js`/`.mjs`/`.cjs`. Works in the file, preview and folder commands. Declaration files are skipped.
 - HTML (`.html`, `.htm`): the code in inline JavaScript `<script>` elements is obfuscated and the rest of the page is
   kept byte for byte, written to `<name>.obfuscated.html`. Folder runs now mirror HTML pages too.
-- **JS Obfuscator: Preview Obfuscation** shows the original and obfuscated code in a diff editor. **Save Obfuscated Output**
+- **JS Obfuscator Pro: Preview Obfuscation** shows the original and obfuscated code in a diff editor. **Save Obfuscated Output**
   in the preview's title bar writes exactly what was previewed.
 - The status bar shows the preset for the active file, and whether it comes from a `.obfuscatorrc.json`. Click it to
   change the preset or open the config file. `jsObfuscator.statusBar.enabled` hides it.

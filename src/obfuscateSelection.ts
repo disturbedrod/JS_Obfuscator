@@ -10,13 +10,13 @@ import { errorMessage } from './util';
 export async function obfuscateSelection(): Promise<void> {
 	const editor = vscode.window.activeTextEditor;
 	if (!editor || editor.document.languageId !== 'javascript') {
-		vscode.window.showWarningMessage('JS Obfuscator: select code in a JavaScript file first.');
+		vscode.window.showWarningMessage('JS Obfuscator Pro: select code in a JavaScript file first.');
 		return;
 	}
 
 	const selections = editor.selections.filter((selection) => !selection.isEmpty);
 	if (selections.length === 0) {
-		vscode.window.showInformationMessage('JS Obfuscator: select the code to obfuscate first.');
+		vscode.window.showInformationMessage('JS Obfuscator Pro: select the code to obfuscate first.');
 		return;
 	}
 
@@ -25,7 +25,7 @@ export async function obfuscateSelection(): Promise<void> {
 		// A source map for a fragment spliced into a file would point at the wrong place, so selections never get one.
 		options = { ...(await new OptionsResolver().resolve(editor.document.uri)), sourceMap: false };
 	} catch (err) {
-		vscode.window.showErrorMessage(`JS Obfuscator: ${errorMessage(err)}`);
+		vscode.window.showErrorMessage(`JS Obfuscator Pro: ${errorMessage(err)}`);
 		return;
 	}
 
@@ -35,7 +35,7 @@ export async function obfuscateSelection(): Promise<void> {
 		replacements = selections.map((range) => ({ range, text: obfuscateCode(editor.document.getText(range), options) }));
 	} catch (err) {
 		vscode.window.showErrorMessage(
-			`JS Obfuscator: could not obfuscate the selection: ${errorMessage(err)}. ` +
+			`JS Obfuscator Pro: could not obfuscate the selection: ${errorMessage(err)}. ` +
 				'Select complete statements (for example whole functions), not part of an expression.',
 		);
 		return;
@@ -47,6 +47,6 @@ export async function obfuscateSelection(): Promise<void> {
 		}
 	});
 	if (!applied) {
-		vscode.window.showErrorMessage('JS Obfuscator: the document changed while obfuscating; nothing was replaced.');
+		vscode.window.showErrorMessage('JS Obfuscator Pro: the document changed while obfuscating; nothing was replaced.');
 	}
 }

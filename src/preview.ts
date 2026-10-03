@@ -36,7 +36,7 @@ class PreviewProvider implements vscode.TextDocumentContentProvider {
 	}
 
 	provideTextDocumentContent(uri: vscode.Uri): string {
-		return this.previews.get(uri.toString())?.files[0].text ?? '// This preview has expired. Run "JS Obfuscator: Preview Obfuscation" again.';
+		return this.previews.get(uri.toString())?.files[0].text ?? '// This preview has expired. Run "JS Obfuscator Pro: Preview Obfuscation" again.';
 	}
 }
 
@@ -60,12 +60,12 @@ async function previewObfuscation(provider: PreviewProvider, uri: vscode.Uri | u
 	try {
 		document = uri ? await vscode.workspace.openTextDocument(uri) : vscode.window.activeTextEditor?.document;
 	} catch (err) {
-		vscode.window.showErrorMessage(`JS Obfuscator: ${errorMessage(err)}`);
+		vscode.window.showErrorMessage(`JS Obfuscator Pro: ${errorMessage(err)}`);
 		return;
 	}
 	const kind = document && documentKind(document);
 	if (!document || !kind) {
-		vscode.window.showWarningMessage('JS Obfuscator: open a JavaScript, TypeScript or HTML file to preview.');
+		vscode.window.showWarningMessage('JS Obfuscator Pro: open a JavaScript, TypeScript or HTML file to preview.');
 		return;
 	}
 	const source = document;
@@ -85,7 +85,7 @@ async function previewObfuscation(provider: PreviewProvider, uri: vscode.Uri | u
 		const title = `${path.basename(source.uri.path)} ↔ ${path.basename(displayPath)} (Obfuscation Preview)`;
 		await vscode.commands.executeCommand('vscode.diff', source.uri, previewUri, title, { preview: false });
 	} catch (err) {
-		vscode.window.showErrorMessage(`JS Obfuscator: could not obfuscate ${displayName(source.uri)}: ${errorMessage(err)}`);
+		vscode.window.showErrorMessage(`JS Obfuscator Pro: could not obfuscate ${displayName(source.uri)}: ${errorMessage(err)}`);
 	}
 }
 
@@ -94,7 +94,7 @@ async function savePreview(provider: PreviewProvider, uri: vscode.Uri | undefine
 	const previewUri = uri?.scheme === PREVIEW_SCHEME ? uri : activePreviewUri();
 	const preview = previewUri && provider.previews.get(previewUri.toString());
 	if (!preview) {
-		vscode.window.showWarningMessage('JS Obfuscator: this preview has expired. Run "JS Obfuscator: Preview Obfuscation" again.');
+		vscode.window.showWarningMessage('JS Obfuscator Pro: this preview has expired. Run "JS Obfuscator Pro: Preview Obfuscation" again.');
 		return;
 	}
 
@@ -109,12 +109,12 @@ async function savePreview(provider: PreviewProvider, uri: vscode.Uri | undefine
 		await writeOutputFiles(files);
 
 		const open = 'Open';
-		const choice = await vscode.window.showInformationMessage(`JS Obfuscator: wrote ${displayName(outputUri)}`, open);
+		const choice = await vscode.window.showInformationMessage(`JS Obfuscator Pro: wrote ${displayName(outputUri)}`, open);
 		if (choice === open) {
 			await showOutput(outputUri);
 		}
 	} catch (err) {
-		vscode.window.showErrorMessage(`JS Obfuscator: could not save the preview: ${errorMessage(err)}`);
+		vscode.window.showErrorMessage(`JS Obfuscator Pro: could not save the preview: ${errorMessage(err)}`);
 	}
 }
 
