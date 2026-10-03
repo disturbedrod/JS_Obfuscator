@@ -2,15 +2,20 @@
   "name": "js-obfuscator",
   "displayName": "JS Obfuscator",
   "description": "Obfuscate JavaScript, TypeScript and inline HTML scripts from inside VS Code.",
-  "version": "0.0.1",
-  "publisher": "your-publisher-id",
-  "license": "UNLICENSED",
+  "version": "1.0.0",
+  "publisher": "rsandoval1206",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.95.0"
   },
   "categories": [
+    "Programming Languages",
     "Other"
   ],
+  "repository": {
+    "type": "git", 
+    "url": "https://github.com/disturbedrod/JS_Obfuscator.git"
+  },
   "keywords": [
     "javascript",
     "obfuscate",
