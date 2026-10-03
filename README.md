@@ -223,7 +223,7 @@ The extension is bundled with esbuild into `out/extension.js`, so runtime depend
   opens, use **File → Open Folder…** to open the other project. That window remembers the folder for next time. After
   code changes, press **Cmd/Ctrl+R** in it to reload.
 - **As an installed extension:** run `npm run package`, then **Extensions → … → Install from VSIX**, or
-  `code --install-extension js-obfuscator-0.0.1.vsix`. Reinstall after every change.
+  `code --install-extension js-obfuscator-0.1.0.vsix`. Reinstall after every change.
 
 ### Troubleshooting
 
