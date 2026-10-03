@@ -136,7 +136,7 @@ if (missing.length) {
 // --- .obfuscatorrc.json schema
 const schema = {
 	$schema: 'http://json-schema.org/draft-07/schema#',
-	title: 'JS Obfuscator configuration (.obfuscatorrc.json)',
+	title: 'JS Obfuscator Pro configuration (.obfuscatorrc.json)',
 	description: 'javascript-obfuscator options for this folder and its subfolders. They override the jsObfuscator.* settings.',
 	type: 'object',
 	additionalProperties: false,
@@ -212,7 +212,7 @@ const options = Object.fromEntries(
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 pkg.contributes.configuration = [
-	{ id: 'jsObfuscator', title: 'JS Obfuscator', properties: general },
+	{ id: 'jsObfuscator', title: 'JS Obfuscator Pro', properties: general },
 	{ id: 'jsObfuscator.options', title: 'Obfuscation Options', properties: options },
 ];
 pkg.contributes.jsonValidation = [{ fileMatch: '.obfuscatorrc.json', url: './schemas/obfuscatorrc.schema.json' }];

@@ -41,45 +41,45 @@
       {
         "command": "jsObfuscator.obfuscateFileToNewFile",
         "title": "Obfuscate File to New File",
-        "category": "JS Obfuscator",
+        "category": "JS Obfuscator Pro",
         "icon": "$(lock)"
       },
       {
         "command": "jsObfuscator.obfuscateFileAs",
         "title": "Obfuscate File As...",
-        "category": "JS Obfuscator"
+        "category": "JS Obfuscator Pro"
       },
       {
         "command": "jsObfuscator.previewObfuscation",
         "title": "Preview Obfuscation",
-        "category": "JS Obfuscator",
+        "category": "JS Obfuscator Pro",
         "icon": "$(diff)"
       },
       {
         "command": "jsObfuscator.savePreview",
         "title": "Save Obfuscated Output",
-        "category": "JS Obfuscator",
+        "category": "JS Obfuscator Pro",
         "icon": "$(save)"
       },
       {
         "command": "jsObfuscator.obfuscateSelection",
         "title": "Obfuscate Selection",
-        "category": "JS Obfuscator"
+        "category": "JS Obfuscator Pro"
       },
       {
         "command": "jsObfuscator.obfuscateFolder",
         "title": "Obfuscate All JavaScript in Folder",
-        "category": "JS Obfuscator"
+        "category": "JS Obfuscator Pro"
       },
       {
         "command": "jsObfuscator.selectPreset",
         "title": "Select Obfuscation Preset",
-        "category": "JS Obfuscator"
+        "category": "JS Obfuscator Pro"
       },
       {
         "command": "jsObfuscator.createConfigFile",
         "title": "Create .obfuscatorrc.json",
-        "category": "JS Obfuscator"
+        "category": "JS Obfuscator Pro"
       }
     ],
     "menus": {
@@ -173,7 +173,7 @@
     "configuration": [
       {
         "id": "jsObfuscator",
-        "title": "JS Obfuscator",
+        "title": "JS Obfuscator Pro",
         "properties": {
           "jsObfuscator.preset": {
             "type": "string",

@@ -20,7 +20,7 @@ interface Job {
 export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.Uri, uris?: vscode.Uri[]): Promise<void> {
 	const scopes = uri ? (uris?.length ? uris : [uri]) : (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri);
 	if (scopes.length === 0) {
-		vscode.window.showWarningMessage('JS Obfuscator: open a folder or workspace first.');
+		vscode.window.showWarningMessage('JS Obfuscator Pro: open a folder or workspace first.');
 		return;
 	}
 
@@ -29,11 +29,11 @@ export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.U
 	try {
 		({ jobs, skipped } = await collectJobs(scopes));
 	} catch (err) {
-		vscode.window.showErrorMessage(`JS Obfuscator: ${errorMessage(err)}`);
+		vscode.window.showErrorMessage(`JS Obfuscator Pro: ${errorMessage(err)}`);
 		return;
 	}
 	if (jobs.length === 0) {
-		vscode.window.showInformationMessage('JS Obfuscator: no JavaScript, TypeScript or HTML files found.');
+		vscode.window.showInformationMessage('JS Obfuscator Pro: no JavaScript, TypeScript or HTML files found.');
 		return;
 	}
 
@@ -45,7 +45,7 @@ export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.U
 			modal: true,
 			detail:
 				'Original files are not modified. Existing files in the output folder are overwritten.' +
-				(skipped.length ? ` ${skipped.length} TypeScript file(s) are skipped because a JavaScript file of the same name is written instead. The run's log in the JS Obfuscator output panel lists them.` : ''),
+				(skipped.length ? ` ${skipped.length} TypeScript file(s) are skipped because a JavaScript file of the same name is written instead. The run's log in the JS Obfuscator Pro output panel lists them.` : ''),
 		},
 		confirm,
 	);
@@ -92,8 +92,8 @@ export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.U
 	const showLog = 'Show Log';
 	const reveal = 'Reveal in Explorer';
 	const action = failures.length || cancelled
-		? await vscode.window.showWarningMessage(`JS Obfuscator: ${summary}`, showLog)
-		: await vscode.window.showInformationMessage(`JS Obfuscator: ${summary}`, reveal, showLog);
+		? await vscode.window.showWarningMessage(`JS Obfuscator Pro: ${summary}`, showLog)
+		: await vscode.window.showInformationMessage(`JS Obfuscator Pro: ${summary}`, reveal, showLog);
 	if (action === showLog) {
 		log.show();
 	} else if (action === reveal) {

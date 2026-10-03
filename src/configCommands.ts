@@ -20,7 +20,7 @@ export async function selectPreset(): Promise<void> {
 			detail: PRESET_DESCRIPTIONS[name],
 			name,
 		})),
-		{ title: 'JS Obfuscator: Select Obfuscation Preset', placeHolder: `Current preset: ${current}` },
+		{ title: 'JS Obfuscator Pro: Select Obfuscation Preset', placeHolder: `Current preset: ${current}` },
 	);
 	if (!picked) {
 		return;
@@ -33,7 +33,7 @@ export async function selectPreset(): Promise<void> {
 	const activeUri = vscode.window.activeTextEditor?.document.uri;
 	const rc = activeUri ? await new OptionsResolver().findRcConfig(activeUri).catch(() => undefined) : undefined;
 	const suffix = rc?.preset && rc.preset !== picked.name ? ` Note: ${displayName(rc.uri)} sets "${rc.preset}", which takes priority for files it covers.` : '';
-	vscode.window.showInformationMessage(`JS Obfuscator: preset set to "${picked.name}".${suffix}`);
+	vscode.window.showInformationMessage(`JS Obfuscator Pro: preset set to "${picked.name}".${suffix}`);
 }
 
 /** Creates a starter `.obfuscatorrc.json` in a workspace folder root, or opens the existing one. */
@@ -55,14 +55,14 @@ export async function createConfigFile(): Promise<void> {
 		}
 		await vscode.window.showTextDocument(uri);
 	} catch (err) {
-		vscode.window.showErrorMessage(`JS Obfuscator: could not create ${RC_FILE}: ${errorMessage(err)}`);
+		vscode.window.showErrorMessage(`JS Obfuscator Pro: could not create ${RC_FILE}: ${errorMessage(err)}`);
 	}
 }
 
 async function pickWorkspaceFolder(): Promise<vscode.WorkspaceFolder | undefined> {
 	const folders = vscode.workspace.workspaceFolders ?? [];
 	if (folders.length === 0) {
-		vscode.window.showWarningMessage(`JS Obfuscator: open a folder to create ${RC_FILE}.`);
+		vscode.window.showWarningMessage(`JS Obfuscator Pro: open a folder to create ${RC_FILE}.`);
 		return undefined;
 	}
 	if (folders.length === 1) {

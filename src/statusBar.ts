@@ -9,7 +9,7 @@ import { displayName, errorMessage } from './util';
  */
 export function registerStatusBar(): vscode.Disposable[] {
 	const item = vscode.window.createStatusBarItem('jsObfuscator.preset', vscode.StatusBarAlignment.Right, 100);
-	item.name = 'JS Obfuscator Preset';
+	item.name = 'JS Obfuscator Pro Preset';
 	let generation = 0;
 
 	const update = async (): Promise<void> => {
@@ -30,10 +30,10 @@ export function registerStatusBar(): vscode.Disposable[] {
 			item.text = `$(lock) ${preset}`;
 			item.backgroundColor = undefined;
 			if (rc?.preset) {
-				item.tooltip = `JS Obfuscator preset: ${preset}, set by ${displayName(rc.uri)}. Click to open it.`;
+				item.tooltip = `JS Obfuscator Pro preset: ${preset}, set by ${displayName(rc.uri)}. Click to open it.`;
 				item.command = { title: `Open ${RC_FILE}`, command: 'vscode.open', arguments: [rc.uri] };
 			} else {
-				item.tooltip = `JS Obfuscator preset: ${preset}. Click to change it.`;
+				item.tooltip = `JS Obfuscator Pro preset: ${preset}. Click to change it.`;
 				item.command = 'jsObfuscator.selectPreset';
 			}
 		} catch (err) {
@@ -41,7 +41,7 @@ export function registerStatusBar(): vscode.Disposable[] {
 				return;
 			}
 			item.text = '$(warning) preset';
-			item.tooltip = `JS Obfuscator: ${errorMessage(err)}`;
+			item.tooltip = `JS Obfuscator Pro: ${errorMessage(err)}`;
 			item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 			item.command = undefined;
 		}

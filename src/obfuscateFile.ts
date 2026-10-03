@@ -39,15 +39,15 @@ async function obfuscateFiles(uri: vscode.Uri | undefined, uris: vscode.Uri[] | 
 			await writeOutputFiles(outputFilesFor(obfuscated, outputUri));
 			written.push(outputUri);
 		} catch (err) {
-			vscode.window.showErrorMessage(`JS Obfuscator: could not obfuscate ${displayName(document.uri)}: ${errorMessage(err)}`);
+			vscode.window.showErrorMessage(`JS Obfuscator Pro: could not obfuscate ${displayName(document.uri)}: ${errorMessage(err)}`);
 		}
 	}
 
 	if (written.length === 1) {
 		await showOutput(written[0]);
-		vscode.window.showInformationMessage(`JS Obfuscator: wrote ${displayName(written[0])}`);
+		vscode.window.showInformationMessage(`JS Obfuscator Pro: wrote ${displayName(written[0])}`);
 	} else if (written.length > 1) {
-		vscode.window.showInformationMessage(`JS Obfuscator: wrote ${written.length} obfuscated files.`);
+		vscode.window.showInformationMessage(`JS Obfuscator Pro: wrote ${written.length} obfuscated files.`);
 	}
 }
 
@@ -60,7 +60,7 @@ async function resolveDocuments(uri: vscode.Uri | undefined, uris: vscode.Uri[] 
 	if (!uri) {
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
-			vscode.window.showWarningMessage('JS Obfuscator: open a JavaScript, TypeScript or HTML file first.');
+			vscode.window.showWarningMessage('JS Obfuscator Pro: open a JavaScript, TypeScript or HTML file first.');
 			return [];
 		}
 		uri = editor.document.uri;
@@ -79,8 +79,8 @@ async function resolveDocuments(uri: vscode.Uri | undefined, uris: vscode.Uri[] 
 		const skipped = targets.length - documents.length;
 		vscode.window.showWarningMessage(
 			documents.length === 0
-				? 'JS Obfuscator: the selected file is not JavaScript, TypeScript or HTML. TypeScript declaration files (.d.ts) have no code to obfuscate.'
-				: `JS Obfuscator: skipped ${skipped} item(s) that are not JavaScript, TypeScript or HTML files.`,
+				? 'JS Obfuscator Pro: the selected file is not JavaScript, TypeScript or HTML. TypeScript declaration files (.d.ts) have no code to obfuscate.'
+				: `JS Obfuscator Pro: skipped ${skipped} item(s) that are not JavaScript, TypeScript or HTML files.`,
 		);
 	}
 	return documents;
