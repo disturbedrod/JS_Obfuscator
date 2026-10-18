@@ -19,6 +19,7 @@ export interface OutputSettings {
 	suffix: string;
 	folder: string;
 	exclude: string[];
+	uniquePrefixes: boolean;
 }
 
 interface RcConfig {
@@ -42,7 +43,8 @@ export function getOutputSettings(scope?: vscode.Uri): OutputSettings {
 	}
 
 	const exclude = config.get<string[]>('exclude', []).filter((glob) => typeof glob === 'string' && glob.trim());
-	return { suffix, folder, exclude };
+	const uniquePrefixes = config.get<boolean>('output.uniquePrefixes', true);
+	return { suffix, folder, exclude, uniquePrefixes };
 }
 
 /**
@@ -128,7 +130,7 @@ function parseRcConfig(uri: vscode.Uri, text: string): RcConfig {
 	try {
 		json = JSON.parse(text);
 	} catch (err) {
-		throw new Error(`${name} is not valid JSON: ${errorMessage(err)}`);
+		throw new Error(`${name} is not valid JSON: ${errorMessage(err)}`, { cause: err });
 	}
 	if (typeof json !== 'object' || json === null || Array.isArray(json)) {
 		throw new Error(`${name} must contain a JSON object of obfuscator options.`);

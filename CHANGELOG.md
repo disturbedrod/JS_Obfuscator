@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.1.0 - Unreleased
+
+### Added
+
+- Folder runs give each file its own `identifiersPrefix` part, a short hash of its path, so separately obfuscated
+  scripts loaded on one page can't collide on the obfuscator's global helper functions. The prefix is added after any
+  `identifiersPrefix` you set, and HTML pages still get their per-script `s1`, `s2`, … on top. On by default; turn it
+  off with `jsObfuscator.output.uniquePrefixes`.
+- Unit tests (Mocha) for the obfuscation pipeline and integration tests that drive every command inside VS Code,
+  tested on the latest VS Code and on 1.95, the oldest supported version.
+- ESLint with type-aware checks for unhandled promises.
+- GitHub Actions: CI on Linux, macOS and Windows, and a release workflow that publishes to Open VSX and the VS Code
+  Marketplace when a version tag is pushed.
+
+### Changed
+
+- Errors about invalid `.obfuscatorrc.json` files and failing inline scripts keep the original error as their `cause`.
+- javascript-obfuscator upgraded from 5.8.0 to 5.9.0. This brings in the 5.8.1 fixes for `controlFlowFlattening`
+  breaking short-circuit evaluation of `&&`, `||` and `??` (used by the `medium` and `high` presets), and for
+  `transformObjectKeys` sharing default parameter objects between calls. The options are unchanged.
+- `@types/vscode` updated to 1.140 (the minimum VS Code version is still 1.95).
+
 ## 1.0.0 - 2026-10-02
 
 ### Added

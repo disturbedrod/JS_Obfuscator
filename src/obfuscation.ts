@@ -26,8 +26,10 @@ export class ObfuscationRun {
 	private readonly resolver = new OptionsResolver();
 	private readonly tsConfigCache = new Map<string, CompilerOptions>();
 
-	async obfuscate(source: vscode.Uri, text: string, kind: SourceKind): Promise<Obfuscated> {
-		const options = await this.resolver.resolve(source);
+	/** `filePrefix` is appended to the resolved `identifiersPrefix`; folder runs pass one per file. */
+	async obfuscate(source: vscode.Uri, text: string, kind: SourceKind, filePrefix?: string): Promise<Obfuscated> {
+		const resolved = await this.resolver.resolve(source);
+		const options = filePrefix ? { ...resolved, identifiersPrefix: `${resolved.identifiersPrefix ?? ''}${filePrefix}` } : resolved;
 		const result = obfuscateSource(
 			{
 				text,

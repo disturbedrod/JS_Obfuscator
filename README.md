@@ -128,6 +128,9 @@ at the root of its workspace folder, mirroring the original structure: `src/lib/
 - Every HTML page is written, with or without inline scripts. Other assets (CSS, images, JSON) are not copied.
 - Each file is obfuscated independently. Global names are not renamed by default, so code shared between files through
   globals keeps working. Turning on `renameGlobals` breaks that.
+- Each file gets its own `identifiersPrefix` part, based on its path, so separately obfuscated scripts loaded on one
+  page can't collide on the obfuscator's global helper functions. It's added after any `identifiersPrefix` you set.
+  Turn it off with `jsObfuscator.output.uniquePrefixes`.
 
 ## Configuration
 
@@ -154,6 +157,7 @@ break if reformatted. Every preset hides all string literals. They are based on 
 | `jsObfuscator.options.*` | | 22 common javascript-obfuscator options such as `target`, `renameGlobals`, `reservedNames`, `controlFlowFlattening`, `stringArrayEncoding` and `sourceMap` |
 | `jsObfuscator.output.suffix` | `.obfuscated` | Single-file output name: `app.js` becomes `app<suffix>.js` |
 | `jsObfuscator.output.folder` | `obfuscated` | Folder, relative to the workspace folder, for folder/workspace runs |
+| `jsObfuscator.output.uniquePrefixes` | `true` | Give each file in a folder/workspace run its own `identifiersPrefix` part so helper names can't collide |
 | `jsObfuscator.exclude` | `**/node_modules/**`, `**/.git/**` | Globs skipped by folder/workspace runs |
 | `jsObfuscator.statusBar.enabled` | `true` | Show the active file's preset in the status bar |
 
@@ -190,10 +194,14 @@ From lowest to highest:
 
 ## Roadmap
 
-- [x] **Phase 1:** obfuscate the current file into a new file; obfuscate every JS file in the project/folder; obfuscate a selection; Explorer context menu; "Save As" output path
-- [x] **Phase 2:** settings (presets, common options, output suffix/folder, exclude globs), per-folder `.obfuscatorrc.json` with schema, preset quick pick
-- [x] **Phase 3:** TypeScript and inline HTML `<script>` support, diff preview, status bar preset, source maps
-- [ ] **Phase 4:** unit and integration tests, ESLint, GitHub Actions CI, marketplace metadata, publish to VS Code Marketplace and Open VSX
+- [x] **Phases 1–4:** file, folder and selection obfuscation; presets, settings and `.obfuscatorrc.json`; TypeScript,
+  HTML, preview, status bar and source maps; tests, ESLint, CI and the release workflow
+- [x] **1.1.0 (built, not yet released):** javascript-obfuscator 5.9.0, per-file prefixes in folder runs
+- [ ] **Next:** publish 1.1.0 (including Open VSX), then fixes for Node.js debug protection and responsiveness, then
+  new features such as a run report, output checks and obfuscate-on-save
+
+[ROADMAP.md](ROADMAP.md) has the full plan: what has been done, the next steps in order, deferred dependency upgrades,
+and known issues. [CHANGELOG.md](CHANGELOG.md) lists the changes in each release.
 
 ## Development
 
@@ -213,9 +221,28 @@ The extension is bundled with esbuild into `out/extension.js`, so runtime depend
 | --- | --- |
 | `npm run compile` | Type-check and bundle once |
 | `npm run watch` | Rebundle on change (used by F5) |
-| `npm run typecheck` | Run `tsc` without emitting |
+| `npm run typecheck` | Run `tsc` without emitting, on the sources and the tests |
+| `npm run lint` | Run ESLint |
+| `npm test` | Unit tests, then integration tests |
+| `npm run test:unit` | Unit tests (Mocha, plain Node) |
+| `npm run test:integration` | Integration tests in a downloaded copy of VS Code |
 | `npm run package` | Build a `.vsix` |
+| `npm run publish:ovsx` | Package and publish to Open VSX (needs `OVSX_PAT`) |
 | `npm run generate-config` | Regenerate the settings in `package.json` and `schemas/obfuscatorrc.schema.json` from javascript-obfuscator's options. Run it after upgrading the library |
+
+### Tests
+
+- **Unit tests** (`test/unit/`) cover the modules that don't import `vscode`: options and presets, output paths, the
+  per-file prefix, TypeScript transpiling, HTML script replacement, source maps, and that obfuscated code still behaves
+  the same under every preset.
+- **Integration tests** (`test/integration/`) run inside VS Code against a copy of `test/fixtures/workspace`: every
+  command, overwrite prompts, the preview, folder runs, `.obfuscatorrc.json`, and the settings. The first run downloads
+  VS Code into `.vscode-test/` and opens a test window. Set `VSCODE_TEST_VERSION=1.95.0` to test the oldest supported
+  version. Dialogs are stubbed, since tests can't click them.
+- Tests are bundled by `scripts/build-tests.mjs` into `out/test/`, which is left out of the package.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs typecheck, lint and both test suites on Linux, macOS and Windows, plus
+VS Code 1.95 on Linux, and uploads the `.vsix` as a build artifact.
 
 ### Trying it in another project
 
@@ -223,7 +250,7 @@ The extension is bundled with esbuild into `out/extension.js`, so runtime depend
   opens, use **File → Open Folder…** to open the other project. That window remembers the folder for next time. After
   code changes, press **Cmd/Ctrl+R** in it to reload.
 - **As an installed extension:** run `npm run package`, then **Extensions → … → Install from VSIX**, or
-  `code --install-extension js-obfuscator-pro-1.0.0.vsix`. Reinstall after every change.
+  `code --install-extension js-obfuscator-pro-1.1.0.vsix`. Reinstall after every change.
 
 ### Troubleshooting
 
@@ -239,6 +266,24 @@ npm run package
 ```
 
 This produces a `.vsix` you can install via **Extensions → … → Install from VSIX**.
+
+## Publishing
+
+Pushing a tag that matches `package.json`'s version (`v1.0.1` for version `1.0.1`) runs `.github/workflows/release.yml`.
+It tests and packages the extension, attaches the `.vsix` to a GitHub release, and publishes it to each registry whose
+token is set as a repository secret. Without the secrets the publish steps are skipped, so you can still upload the
+`.vsix` by hand.
+
+**Open VSX** (used by VSCodium, Cursor, Gitpod and other VS Code forks), one-time setup:
+
+1. Sign in at [open-vsx.org](https://open-vsx.org) with GitHub, link an Eclipse account and sign the publisher agreement.
+2. Create an access token in your Open VSX settings.
+3. Create the namespace matching the `publisher` field: `npx ovsx create-namespace rsandoval1206 -p <token>`.
+4. Add the token as the `OVSX_PAT` repository secret, or publish from your machine with `OVSX_PAT=<token> npm run publish:ovsx`.
+
+**VS Code Marketplace:** upload the `.vsix` at
+[marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage), or add a Marketplace personal access
+token as the `VSCE_PAT` secret to let the release workflow publish.
 
 ## Credits
 

@@ -76,7 +76,7 @@ export function replaceInlineScripts(html: string, transform: (code: string, ind
 		try {
 			code = transform(script.code, index, scripts.length);
 		} catch (err) {
-			throw new Error(`inline <script> ${index + 1} of ${scripts.length} (line ${script.line}): ${err instanceof Error ? err.message : String(err)}`);
+			throw new Error(`inline <script> ${index + 1} of ${scripts.length} (line ${script.line}): ${err instanceof Error ? err.message : String(err)}`, { cause: err });
 		}
 		const leading = /^\s*/.exec(script.code)![0];
 		const trailing = /\s*$/.exec(script.code)![0];

@@ -1,0 +1,68 @@
+name: Release
+
+# Push a tag matching package.json's version (for example v1.0.1) to build, test and package the extension, attach the
+# .vsix to a GitHub release, and publish it to Open VSX and the VS Code Marketplace. Each registry is skipped when its
+# token secret (OVSX_PAT, VSCE_PAT) isn't set, so the .vsix can still be uploaded by hand.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check the tag matches package.json
+        if: github.ref_type == 'tag'
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${version}"
+            exit 1
+          fi
+
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:unit
+      - run: xvfb-run -a npm run test:integration
+
+      - name: Package
+        id: package
+        run: |
+          npm run package
+          echo "vsix=$(ls *.vsix)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: ${{ steps.package.outputs.vsix }}
+
+      - name: GitHub release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" "${{ steps.package.outputs.vsix }}" --title "${GITHUB_REF_NAME}" --notes "See CHANGELOG.md."
+
+      - name: Publish to Open VSX
+        if: github.ref_type == 'tag' && env.OVSX_PAT != ''
+        run: npx ovsx publish --packagePath "${{ steps.package.outputs.vsix }}"
+
+      - name: Publish to the VS Code Marketplace
+        if: github.ref_type == 'tag' && env.VSCE_PAT != ''
+        run: npx vsce publish --packagePath "${{ steps.package.outputs.vsix }}"

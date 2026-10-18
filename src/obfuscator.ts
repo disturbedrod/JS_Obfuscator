@@ -107,6 +107,21 @@ function isOutside(relative: string): boolean {
 	return relative === '..' || relative.startsWith('../') || path.isAbsolute(relative);
 }
 
+/**
+ * Short `identifiersPrefix` for a file in a folder run, derived from its path relative to the workspace folder, so
+ * separately obfuscated files loaded on one page don't collide on the obfuscator's global helper names. The same path
+ * always gives the same prefix. Starts with a letter so it's a valid identifier start.
+ */
+export function filePrefix(relativePath: string): string {
+	// 32-bit FNV-1a.
+	let hash = 0x811c9dc5;
+	for (let i = 0; i < relativePath.length; i++) {
+		hash ^= relativePath.charCodeAt(i);
+		hash = Math.imul(hash, 0x01000193) >>> 0;
+	}
+	return `f${hash.toString(36)}`;
+}
+
 /** True for files written by the single-file command, such as `app.obfuscated.js` or `index.obfuscated.html` for suffix `.obfuscated`. */
 export function hasOutputSuffix(file: string, suffix: string = DEFAULT_OUTPUT_SUFFIX): boolean {
 	const { name, ext } = path.parse(file);

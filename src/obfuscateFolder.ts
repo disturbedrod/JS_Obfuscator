@@ -1,7 +1,8 @@
+import { posix as path } from 'path';
 import * as vscode from 'vscode';
 import { getOutputSettings } from './config';
 import { ObfuscationRun, outputFilesFor, writeOutputFiles } from './obfuscation';
-import { getMirroredOutputPath, hasOutputSuffix, isInOutputFolder } from './obfuscator';
+import { filePrefix, getMirroredOutputPath, hasOutputSuffix, isInOutputFolder } from './obfuscator';
 import { SOURCE_GLOB, SourceKind, sourceKindFromPath } from './pipeline';
 import { displayName, errorMessage, readSource } from './util';
 
@@ -11,6 +12,8 @@ interface Job {
 	output: vscode.Uri;
 	/** `<root>/<output folder>`, where root is the containing workspace folder, else the selected folder. */
 	outputRoot: vscode.Uri;
+	/** Per-file `identifiersPrefix` part, when `jsObfuscator.output.uniquePrefixes` is on. */
+	prefix?: string;
 }
 
 /**
@@ -73,7 +76,7 @@ export async function obfuscateFolders(log: vscode.OutputChannel, uri?: vscode.U
 				await new Promise((resolve) => setImmediate(resolve));
 
 				try {
-					const obfuscated = await run.obfuscate(job.source, await readSource(job.source), job.kind);
+					const obfuscated = await run.obfuscate(job.source, await readSource(job.source), job.kind, job.prefix);
 					await writeOutputFiles(outputFilesFor(obfuscated, job.output));
 					log.appendLine(`  ok    ${displayName(job.source)} -> ${displayName(job.output)}`);
 					done++;
@@ -107,7 +110,7 @@ async function collectJobs(scopes: vscode.Uri[]): Promise<{ jobs: Job[]; skipped
 	const skipped = new Map<string, string>();
 	for (const scope of scopes) {
 		const root = vscode.workspace.getWorkspaceFolder(scope)?.uri ?? scope;
-		const { suffix, folder, exclude } = getOutputSettings(root);
+		const { suffix, folder, exclude, uniquePrefixes } = getOutputSettings(root);
 		const outputRoot = vscode.Uri.joinPath(root, folder);
 		const files = await vscode.workspace.findFiles(new vscode.RelativePattern(scope, SOURCE_GLOB), combineGlobs(exclude));
 		for (const source of files) {
@@ -118,7 +121,8 @@ async function collectJobs(scopes: vscode.Uri[]): Promise<{ jobs: Job[]; skipped
 				continue;
 			}
 			const output = root.with({ path: outputPath });
-			const job: Job = { source, kind, output, outputRoot };
+			const prefix = uniquePrefixes ? filePrefix(path.relative(root.path, source.path)) : undefined;
+			const job: Job = { source, kind, output, outputRoot, prefix };
 			// `app.ts` and `app.js` side by side both mirror to `app.js`; the JavaScript file wins, as it's usually the build of the other.
 			const existing = jobs.get(output.toString());
 			if (existing && existing.source.toString() !== source.toString()) {
@@ -130,8 +134,22 @@ async function collectJobs(scopes: vscode.Uri[]): Promise<{ jobs: Job[]; skipped
 			jobs.set(output.toString(), job);
 		}
 	}
+	const sorted = [...jobs.values()].sort((a, b) => a.source.path.localeCompare(b.source.path));
+	// Hash collisions are unlikely but possible; later files get a counter so every prefix in the run is distinct.
+	const used = new Set<string>();
+	for (const job of sorted) {
+		if (!job.prefix) {
+			continue;
+		}
+		let prefix = job.prefix;
+		for (let n = 2; used.has(prefix); n++) {
+			prefix = `${job.prefix}_${n}`;
+		}
+		used.add(prefix);
+		job.prefix = prefix;
+	}
 	return {
-		jobs: [...jobs.values()].sort((a, b) => a.source.path.localeCompare(b.source.path)),
+		jobs: sorted,
 		skipped: [...skipped.values()].sort(),
 	};
 }
