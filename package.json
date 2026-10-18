@@ -2,7 +2,7 @@
   "name": "js-obfuscator-pro",
   "displayName": "JS Obfuscator Pro",
   "description": "Obfuscate JavaScript, TypeScript and inline HTML scripts from inside VS Code.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "rsandoval1206",
   "license": "MIT",
   "icon": "images/icon.png",

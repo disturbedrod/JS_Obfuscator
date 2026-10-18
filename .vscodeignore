@@ -13,3 +13,4 @@ out/test/**
 .github/**
 eslint.config.mjs
 *.vsix
+ROADMAP.md

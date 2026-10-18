@@ -194,11 +194,14 @@ From lowest to highest:
 
 ## Roadmap
 
-- [x] **Phase 1:** obfuscate the current file into a new file; obfuscate every JS file in the project/folder; obfuscate a selection; Explorer context menu; "Save As" output path
-- [x] **Phase 2:** settings (presets, common options, output suffix/folder, exclude globs), per-folder `.obfuscatorrc.json` with schema, preset quick pick
-- [x] **Phase 3:** TypeScript and inline HTML `<script>` support, diff preview, status bar preset, source maps
-- [x] **Phase 4:** unit and integration tests, ESLint, GitHub Actions CI, marketplace metadata, release workflow for the VS Code Marketplace and Open VSX
-- [ ] Publish to Open VSX (needs the one-time setup under [Publishing](#publishing))
+- [x] **Phases 1–4:** file, folder and selection obfuscation; presets, settings and `.obfuscatorrc.json`; TypeScript,
+  HTML, preview, status bar and source maps; tests, ESLint, CI and the release workflow
+- [x] **1.1.0 (built, not yet released):** javascript-obfuscator 5.9.0, per-file prefixes in folder runs
+- [ ] **Next:** publish 1.1.0 (including Open VSX), then fixes for Node.js debug protection and responsiveness, then
+  new features such as a run report, output checks and obfuscate-on-save
+
+[ROADMAP.md](ROADMAP.md) has the full plan: what has been done, the next steps in order, deferred dependency upgrades,
+and known issues. [CHANGELOG.md](CHANGELOG.md) lists the changes in each release.
 
 ## Development
 
@@ -247,7 +250,7 @@ VS Code 1.95 on Linux, and uploads the `.vsix` as a build artifact.
   opens, use **File → Open Folder…** to open the other project. That window remembers the folder for next time. After
   code changes, press **Cmd/Ctrl+R** in it to reload.
 - **As an installed extension:** run `npm run package`, then **Extensions → … → Install from VSIX**, or
-  `code --install-extension js-obfuscator-pro-1.0.0.vsix`. Reinstall after every change.
+  `code --install-extension js-obfuscator-pro-1.1.0.vsix`. Reinstall after every change.
 
 ### Troubleshooting
 
