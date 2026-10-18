@@ -185,19 +185,26 @@ const general = {
 			'Folder, relative to the workspace folder, that **Obfuscate All JavaScript in Folder** mirrors its output into.',
 		order: 2,
 	},
+	'jsObfuscator.output.uniquePrefixes': {
+		type: 'boolean',
+		default: true,
+		markdownDescription:
+			'Give each file in **Obfuscate All JavaScript in Folder** its own `identifiersPrefix` part, based on its path, so separately obfuscated scripts loaded on one page can\'t collide on the obfuscator\'s global helper functions. Added after any `identifiersPrefix` you set.',
+		order: 3,
+	},
 	'jsObfuscator.exclude': {
 		type: 'array',
 		items: { type: 'string' },
 		default: ['**/node_modules/**', '**/.git/**'],
 		markdownDescription:
 			'Glob patterns skipped by **Obfuscate All JavaScript in Folder**, such as `**/*.html` to leave HTML pages out. With more than one entry, patterns cannot contain `{}` themselves; add separate entries instead.',
-		order: 3,
+		order: 4,
 	},
 	'jsObfuscator.statusBar.enabled': {
 		type: 'boolean',
 		default: true,
 		markdownDescription: 'Show the preset that applies to the active JavaScript, TypeScript or HTML file in the status bar.',
-		order: 4,
+		order: 5,
 	},
 };
 const options = Object.fromEntries(

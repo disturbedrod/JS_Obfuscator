@@ -205,6 +205,12 @@
             "markdownDescription": "Folder, relative to the workspace folder, that **Obfuscate All JavaScript in Folder** mirrors its output into.",
             "order": 2
           },
+          "jsObfuscator.output.uniquePrefixes": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Give each file in **Obfuscate All JavaScript in Folder** its own `identifiersPrefix` part, based on its path, so separately obfuscated scripts loaded on one page can't collide on the obfuscator's global helper functions. Added after any `identifiersPrefix` you set.",
+            "order": 3
+          },
           "jsObfuscator.exclude": {
             "type": "array",
             "items": {
@@ -215,13 +221,13 @@
               "**/.git/**"
             ],
             "markdownDescription": "Glob patterns skipped by **Obfuscate All JavaScript in Folder**, such as `**/*.html` to leave HTML pages out. With more than one entry, patterns cannot contain `{}` themselves; add separate entries instead.",
-            "order": 3
+            "order": 4
           },
           "jsObfuscator.statusBar.enabled": {
             "type": "boolean",
             "default": true,
             "markdownDescription": "Show the preset that applies to the active JavaScript, TypeScript or HTML file in the status bar.",
-            "order": 4
+            "order": 5
           }
         }
       },
@@ -412,21 +418,36 @@
   "scripts": {
     "vscode:prepublish": "npm run typecheck && npm run bundle -- --minify",
     "compile": "npm run typecheck && npm run bundle",
-    "typecheck": "tsc -p ./ --noEmit",
+    "typecheck": "tsc -p ./ --noEmit && tsc -p test",
     "bundle": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node20 --sourcemap",
     "watch": "npm run bundle -- --watch=forever",
+    "lint": "eslint .",
+    "build-tests": "node scripts/build-tests.mjs",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "npm run build-tests && mocha \"out/test/unit/**/*.test.js\"",
+    "test:integration": "npm run compile && npm run build-tests && vscode-test",
     "package": "vsce package",
+    "publish:ovsx": "ovsx publish",
     "generate-config": "node scripts/generate-config.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.95.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.0.0",
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "mocha": "^12.0.3",
+    "ovsx": "^1.3.0",
+    "typescript-eslint": "^8.71.2"
   },
   "dependencies": {
     "@jridgewell/remapping": "^2.3.5",
-    "javascript-obfuscator": "^5.8.0",
+    "javascript-obfuscator": "^5.9.0",
     "parse5": "^7.3.0",
     "typescript": "^5.9.3"
   }

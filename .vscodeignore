@@ -6,3 +6,10 @@ tsconfig.json
 **/*.map
 **/*.ts
 scripts/**
+test/**
+out/test/**
+.vscode-test/**
+.vscode-test.mjs
+.github/**
+eslint.config.mjs
+*.vsix
